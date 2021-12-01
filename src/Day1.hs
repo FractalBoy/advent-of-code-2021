@@ -18,7 +18,7 @@ pairs :: [a] -> [(a, a)]
 pairs xs = getZipList $ (,) <$> ZipList xs <*> ZipList (tail xs)
 
 threes :: [a] -> [(a, a, a)]
-threes xs = getZipList $ (,,) <$> ZipList xs <*> ZipList (tail xs) <*> ZipList (tail $ drop 1 $ xs)
+threes xs = getZipList $ (,,) <$> ZipList xs <*> ZipList (tail xs) <*> ZipList (tail $ drop 1 xs)
 
 sums :: [(Integer, Integer, Integer)] -> [Integer]
 sums = map (\(x, y, z) -> x + y + z)
