@@ -1,10 +1,15 @@
 module Main where
 
 import qualified AOC (getInput)
+import Control.Monad
+import Control.Monad.Trans
+import Control.Monad.Trans.Maybe
 import Data.Semigroup ((<>))
 import qualified Day1 (part1, part2)
+import GHC.IO.Handle.Text (hPutStrLn)
 import Options.Applicative
 import System.Environment
+import System.IO (hPutStrLn, stderr)
 
 data Options = Options
   { day :: Integer,
@@ -43,17 +48,19 @@ main :: IO ()
 main = do
   (Options day part1 part2) <- execParser opts
   input <- AOC.getInput day
-  let part' = partNumber part1 part2
-  case part' of
-    Nothing -> return ()
-    Just part -> putStrLn $ solve day part input
 
-partNumber :: Bool -> Bool -> Maybe Integer
-partNumber False False = Just 1 -- Default to running part 1
-partNumber True False = Just 1
-partNumber False True = Just 2
-partNumber _ _ = Nothing
+  when (part1 || (not part1 && not part2)) $ showSolution day 1 input -- run part 1 when neither part specified
+  when part2 $ showSolution day 2 input -- run part2 only when specified
 
-solve :: Integer -> Integer -> String -> String
-solve 1 1 = Day1.part1 . lines
-solve 1 2 = Day1.part2 . lines
+showSolution :: Integer -> Integer -> String -> IO ()
+showSolution day part input = void $
+  runMaybeT $ do
+    solution <- solve day part input
+    lift $ putStrLn solution
+
+solve :: Integer -> Integer -> String -> MaybeT IO String
+solve 1 1 xs = MaybeT $ return $ Just $ Day1.part1 $ lines xs
+solve 1 2 xs = MaybeT $ return $ Just $ Day1.part2 $ lines xs
+solve day part _ = do
+  lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
+  MaybeT $ return Nothing

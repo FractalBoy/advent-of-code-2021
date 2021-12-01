@@ -52,7 +52,9 @@ executable advent-of-code2021
     build-depends:
         base ^>=4.14.3.0,
         advent-of-code2021,
-        optparse-applicative
+        optparse-applicative,
+        transformers,
+        mtl
 
     hs-source-dirs:   app
     default-language: Haskell2010
