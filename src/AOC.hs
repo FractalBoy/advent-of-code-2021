@@ -11,7 +11,7 @@ import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Header
 import System.Environment (getEnv)
 
-getInput :: Integer -> IO String
+getInput :: Int -> IO String
 getInput day = do
   manager <- newManager tlsManagerSettings
 
