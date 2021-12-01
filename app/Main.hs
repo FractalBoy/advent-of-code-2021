@@ -1,14 +1,12 @@
 module Main where
 
-import qualified AOC (getInput)
+import AOC
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Semigroup ((<>))
-import qualified Day1 (part1, part2)
-import GHC.IO.Handle.Text (hPutStrLn)
+import qualified Day1
 import Options.Applicative
-import System.Environment
 import System.IO (hPutStrLn, stderr)
 
 data Options = Options
@@ -47,7 +45,7 @@ opts =
 main :: IO ()
 main = do
   (Options day part1 part2) <- execParser opts
-  input <- AOC.getInput day
+  input <- getInput day
 
   when (part1 || (not part1 && not part2)) $ showSolution day 1 input -- run part 1 when neither part specified
   when part2 $ showSolution day 2 input -- run part2 only when specified
