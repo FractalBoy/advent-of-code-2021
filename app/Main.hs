@@ -60,7 +60,8 @@ showSolution day part input = void $
 solve :: Int -> Int -> String -> MaybeT IO String
 solve 1 1 xs = MaybeT $ return $ Just $ Day1.part1 $ lines xs
 solve 1 2 xs = MaybeT $ return $ Just $ Day1.part2 $ lines xs
-solve 2 1 xs = MaybeT $ return $ Just $ Day2.part1 $lines xs
+solve 2 1 xs = MaybeT $ return $ Just $ Day2.part1 $ lines xs
+solve 2 2 xs = MaybeT $ return $ Just $ Day2.part2 $ lines xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing
