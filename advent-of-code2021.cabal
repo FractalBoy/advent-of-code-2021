@@ -24,7 +24,8 @@ extra-source-files: CHANGELOG.md
 library
     exposed-modules:
         AOC,
-        Day1
+        Day1,
+        Day2
 
     -- Modules included in this library but not exported.
     -- other-modules:
