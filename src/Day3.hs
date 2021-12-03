@@ -59,4 +59,4 @@ avgColumns :: [String] -> [Float]
 avgColumns c = map ((/ floatLength c) . sum) $ reverse $ foldl (\acc x -> map (intToFloat . digitToInt) x : acc) [] $ getColumns c
 
 binaryToInt :: String -> Int
-binaryToInt bin = sum $ zipWith (*) [2 ^ x | x <- [0 ..]] (reverse $ map digitToInt bin)
+binaryToInt bin = sum $ getZipList $ (*) <$> ZipList [2 ^ x | x <- [0 ..]] <*> ZipList (reverse $ map digitToInt bin)
