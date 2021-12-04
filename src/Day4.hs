@@ -1,8 +1,6 @@
 module Day4 where
 
 import Data.List
-import Data.String
-import GHC.IO.Encoding.Failure (codingFailureModeSuffix)
 
 data BingoCell = BingoCell {number :: Int, marked :: Bool}
 
