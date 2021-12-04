@@ -1,4 +1,4 @@
-module Day4 where
+module Day4 (part1, part2) where
 
 import Data.List
 
@@ -18,20 +18,22 @@ newtype BingoCard = BingoCard [BingoRow]
 instance Show BingoCard where
   show (BingoCard xs) = unlines $ map show xs
 
+type BingoFunction = ([Int] -> [BingoCard] -> (Int, Maybe BingoCard))
+
 part1 :: [String] -> Maybe String
-part1 input = do
+part1 = solve playBingoUntilSomeoneWins
+
+part2 :: [String] -> Maybe String
+part2 = solve playBingoUntilEveryoneWins
+
+solve :: BingoFunction -> [String] -> Maybe String
+solve bingoFunction input = do
   let (drawings, cards) = readInput input
-  winner <- getWinner drawings cards
-  return $ show $ scoreWinner winner
+  let (drawing, winner) = bingoFunction drawings cards
+  show . scoreWinner drawing <$> winner
 
-getWinner :: [Int] -> [BingoCard] -> Maybe (Int, BingoCard)
-getWinner drawings cards = do
-  let (drawing, cards') = playBingo drawings cards
-  winner <- find isWinner cards'
-  return (drawing, winner)
-
-scoreWinner :: (Int, BingoCard) -> Int
-scoreWinner (drawing, BingoCard rows) = drawing * sum (map scoreRow rows)
+scoreWinner :: Int -> BingoCard -> Int
+scoreWinner drawing (BingoCard rows) = drawing * sum (map scoreRow rows)
 
 scoreRow :: BingoRow -> Int
 scoreRow (BingoRow cells) = sum $ map scoreCell cells
@@ -39,14 +41,19 @@ scoreRow (BingoRow cells) = sum $ map scoreCell cells
 scoreCell :: BingoCell -> Int
 scoreCell cell = if not $ marked cell then number cell else 0
 
-playBingo :: [Int] -> [BingoCard] -> (Int, [BingoCard])
-playBingo = playBingo' 0
-  where
-    playBingo' n [] cards = (n, cards)
-    playBingo' n (drawing : drawings) cards = let cards' = performBingoRound drawing cards in if foundWinner cards then (n, cards) else playBingo' drawing drawings cards'
+playBingoUntilSomeoneWins :: [Int] -> [BingoCard] -> (Int, Maybe BingoCard)
+playBingoUntilSomeoneWins (drawing : drawings) cards = let cards' = performBingoRound drawing cards in if foundWinner cards' then (drawing, find isWinner cards') else playBingoUntilSomeoneWins drawings cards'
+playBingoUntilSomeoneWins _ _ = undefined
+
+playBingoUntilEveryoneWins :: [Int] -> [BingoCard] -> (Int, Maybe BingoCard)
+playBingoUntilEveryoneWins (drawing : drawings) cards = let cards' = performBingoRound drawing cards in if allWinners cards' then (drawing, flipCard drawing <$> find (not . isWinner) cards) else playBingoUntilEveryoneWins drawings cards'
+playBingoUntilEveryoneWins _ _ = undefined
 
 foundWinner :: [BingoCard] -> Bool
 foundWinner = any isWinner
+
+allWinners :: [BingoCard] -> Bool
+allWinners = all isWinner
 
 isWinner :: BingoCard -> Bool
 isWinner card = hasWinningRow card || hasWinningColumn card
