@@ -72,7 +72,7 @@ flipRow :: Int -> BingoRow -> BingoRow
 flipRow n (BingoRow cells) = BingoRow $ map (flipCell n) cells
 
 flipCell :: Int -> BingoCell -> BingoCell
-flipCell n cell = let (BingoCell number _) = cell in if n == number then BingoCell number True else cell
+flipCell n cell = if number cell == n then cell {marked = True} else cell
 
 readInput :: [String] -> ([Int], [BingoCard])
 readInput [] = ([], [])
