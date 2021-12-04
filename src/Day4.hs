@@ -4,9 +4,9 @@ import Data.List
 
 data BingoCell = BingoCell {number :: Int, marked :: Bool}
 
-newtype BingoRow = BingoRow [BingoCell]
+type BingoRow = [BingoCell]
 
-newtype BingoCard = BingoCard [BingoRow]
+type BingoCard = [BingoRow]
 
 type BingoFunction = ([Int] -> [BingoCard] -> (Int, Maybe BingoCard))
 
@@ -23,10 +23,10 @@ solve bingoFunction input = do
   show . scoreWinner drawing <$> winner
 
 scoreWinner :: Int -> BingoCard -> Int
-scoreWinner drawing (BingoCard rows) = drawing * sum (map scoreRow rows)
+scoreWinner drawing rows = drawing * sum (map scoreRow rows)
 
 scoreRow :: BingoRow -> Int
-scoreRow (BingoRow cells) = sum $ map scoreCell cells
+scoreRow cells = sum $ map scoreCell cells
 
 scoreCell :: BingoCell -> Int
 scoreCell cell = if not $ marked cell then number cell else 0
@@ -49,22 +49,22 @@ isWinner :: BingoCard -> Bool
 isWinner card = hasWinningRow card || hasWinningColumn card
 
 hasWinningRow :: BingoCard -> Bool
-hasWinningRow (BingoCard rows) = any isWinningRow rows
+hasWinningRow = any isWinningRow
 
 isWinningRow :: BingoRow -> Bool
-isWinningRow (BingoRow row) = all marked row
+isWinningRow = all marked
 
 hasWinningColumn :: BingoCard -> Bool
-hasWinningColumn (BingoCard rows) = hasWinningRow $ BingoCard $ map BingoRow $ transpose $ map (\(BingoRow row) -> row) rows
+hasWinningColumn = hasWinningRow . transpose
 
 performBingoRound :: Int -> [BingoCard] -> [BingoCard]
 performBingoRound n = map (flipCard n)
 
 flipCard :: Int -> BingoCard -> BingoCard
-flipCard n (BingoCard rows) = BingoCard $ map (flipRow n) rows
+flipCard n = map (flipRow n)
 
 flipRow :: Int -> BingoRow -> BingoRow
-flipRow n (BingoRow cells) = BingoRow $ map (flipCell n) cells
+flipRow n = map (flipCell n)
 
 flipCell :: Int -> BingoCell -> BingoCell
 flipCell n cell = if number cell == n then cell {marked = True} else cell
@@ -80,10 +80,10 @@ readCards :: [String] -> [[String]]
 readCards = split ""
 
 parseCard :: [String] -> BingoCard
-parseCard = BingoCard . reverse . foldl (\acc x -> createRow (words x) : acc) []
+parseCard = reverse . foldl (\acc x -> createRow (words x) : acc) []
   where
     createCell cell = BingoCell {number = read cell, marked = False}
-    createRow = BingoRow . map createCell
+    createRow = map createCell
 
 parseDrawings :: String -> [Int]
 parseDrawings = map read . split ','
