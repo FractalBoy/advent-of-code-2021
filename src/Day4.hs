@@ -4,19 +4,9 @@ import Data.List
 
 data BingoCell = BingoCell {number :: Int, marked :: Bool}
 
-instance Show BingoCell where
-  show (BingoCell n True) = show n ++ "-x"
-  show (BingoCell n False) = show n ++ "-o"
-
 newtype BingoRow = BingoRow [BingoCell]
 
-instance Show BingoRow where
-  show (BingoRow xs) = unwords $ map show xs
-
 newtype BingoCard = BingoCard [BingoRow]
-
-instance Show BingoCard where
-  show (BingoCard xs) = unlines $ map show xs
 
 type BingoFunction = ([Int] -> [BingoCard] -> (Int, Maybe BingoCard))
 
