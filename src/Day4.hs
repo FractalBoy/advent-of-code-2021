@@ -8,7 +8,7 @@ type BingoRow = [BingoCell]
 
 type BingoCard = [BingoRow]
 
-type BingoFunction = ([Int] -> [BingoCard] -> (Int, Maybe BingoCard))
+type BingoFunction = [Int] -> [BingoCard] -> (Int, Maybe BingoCard)
 
 part1 :: [String] -> Maybe String
 part1 = solve playBingoUntilSomeoneWins
