@@ -32,11 +32,19 @@ scoreCell :: BingoCell -> Int
 scoreCell cell = if not $ marked cell then number cell else 0
 
 playBingoUntilSomeoneWins :: [Int] -> [BingoCard] -> (Int, Maybe BingoCard)
-playBingoUntilSomeoneWins (drawing : drawings) cards = let cards' = performBingoRound drawing cards in if foundWinner cards' then (drawing, find isWinner cards') else playBingoUntilSomeoneWins drawings cards'
+playBingoUntilSomeoneWins (drawing : drawings) cards =
+  let cards' = performBingoRound drawing cards
+   in if foundWinner cards'
+        then (drawing, find isWinner cards')
+        else playBingoUntilSomeoneWins drawings cards'
 playBingoUntilSomeoneWins _ _ = undefined
 
 playBingoUntilEveryoneWins :: [Int] -> [BingoCard] -> (Int, Maybe BingoCard)
-playBingoUntilEveryoneWins (drawing : drawings) cards = let cards' = performBingoRound drawing cards in if allWinners cards' then (drawing, flipCard drawing <$> find (not . isWinner) cards) else playBingoUntilEveryoneWins drawings cards'
+playBingoUntilEveryoneWins (drawing : drawings) cards =
+  let cards' = performBingoRound drawing cards
+   in if allWinners cards'
+        then (drawing, flipCard drawing <$> find (not . isWinner) cards)
+        else playBingoUntilEveryoneWins drawings cards'
 playBingoUntilEveryoneWins _ _ = undefined
 
 foundWinner :: [BingoCard] -> Bool

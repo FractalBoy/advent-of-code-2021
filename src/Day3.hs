@@ -15,7 +15,9 @@ part2 input = show $ getOxygenGeneratorRating input * getCarbonDioxideScrubberRa
 
 getRating' :: Int -> BitCriteria -> [String] -> String
 getRating' _ _ [x] = x
-getRating' n criteriaFunc xs = getRating' (n + 1) criteriaFunc $ filterReport criteriaFunc n xs
+getRating' n criteriaFunc xs =
+  getRating' (n + 1) criteriaFunc $
+    filterReport criteriaFunc n xs
 
 getRating :: BitCriteria -> [String] -> String
 getRating = getRating' 0
@@ -56,7 +58,16 @@ getColumns :: [String] -> [String]
 getColumns = getZipList . traverse ZipList
 
 avgColumns :: [String] -> [Float]
-avgColumns c = map ((/ floatLength c) . sum) $ reverse $ foldl (\acc x -> map (intToFloat . digitToInt) x : acc) [] $ getColumns c
+avgColumns c =
+  map ((/ floatLength c) . sum) $
+    reverse $
+      foldl (\acc x -> map (intToFloat . digitToInt) x : acc) [] $
+        getColumns c
 
 binaryToInt :: String -> Int
-binaryToInt bin = sum $ getZipList $ (*) <$> ZipList [2 ^ x | x <- [0 ..]] <*> ZipList (reverse $ map digitToInt bin)
+binaryToInt bin =
+  sum $
+    getZipList $
+      (*)
+        <$> ZipList [2 ^ x | x <- [0 ..]]
+        <*> ZipList (reverse $ map digitToInt bin)
