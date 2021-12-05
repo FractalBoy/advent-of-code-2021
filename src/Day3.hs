@@ -2,6 +2,7 @@ module Day3 (part1, part2) where
 
 import Control.Applicative
 import Data.Char
+import Data.List
 
 type RateFunction = [String] -> Int
 
@@ -54,15 +55,12 @@ intToFloat = fromIntegral
 floatLength :: [a] -> Float
 floatLength = fromIntegral . length
 
-getColumns :: [String] -> [String]
-getColumns = getZipList . traverse ZipList
-
 avgColumns :: [String] -> [Float]
 avgColumns c =
   map ((/ floatLength c) . sum) $
     reverse $
       foldl (\acc x -> map (intToFloat . digitToInt) x : acc) [] $
-        getColumns c
+        transpose c
 
 binaryToInt :: String -> Int
 binaryToInt bin =
