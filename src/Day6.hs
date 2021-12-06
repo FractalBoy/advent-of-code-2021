@@ -3,7 +3,6 @@ module Day6 (part1, part2) where
 import AOC
 import Control.Monad
 import Control.Monad.State
-import qualified Data.Map as M
 
 data FishMap = FishMap {day0 :: Int, day1 :: Int, day2 :: Int, day3 :: Int, day4 :: Int, day5 :: Int, day6 :: Int, day7 :: Int, day8 :: Int} deriving (Show)
 
