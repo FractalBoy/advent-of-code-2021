@@ -9,6 +9,7 @@ import qualified Day1
 import qualified Day2
 import qualified Day3
 import qualified Day4
+import qualified Day5
 import Options.Applicative
 import System.IO (hPutStrLn, stderr)
 
@@ -68,6 +69,7 @@ solve 3 1 xs = MaybeT $ return $ Just $ Day3.part1 $ lines xs
 solve 3 2 xs = MaybeT $ return $ Just $ Day3.part2 $ lines xs
 solve 4 1 xs = MaybeT $ return $ Day4.part1 $ lines xs
 solve 4 2 xs = MaybeT $ return $ Day4.part2 $ lines xs
+solve 5 1 xs = MaybeT $ return $ Just $ Day5.part1 $ lines xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing

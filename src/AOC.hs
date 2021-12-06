@@ -1,11 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AOC (getInput) where
+module AOC (getInput, consumeUntilSequence) where
 
 import Configuration.Dotenv
-import Control.Monad (void)
+import Control.Monad
+import Control.Monad.State.Lazy
 import Data.ByteString.Internal (packChars)
 import Data.ByteString.Lazy.Char8 (unpack)
+import Data.List
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Header
@@ -26,3 +28,31 @@ getInput day = do
 
   response <- httpLbs request manager
   return $ unpack $ responseBody response
+
+consumeUntilSequence :: (Eq a) => [a] -> State [a] [a]
+consumeUntilSequence stopWord = do
+  s <- get
+
+  let (start, end) = execState consumeWhile' ([], s)
+
+  put end
+  return start
+  where
+    consumeOne =
+      state
+        ( \(start, end) -> case end of
+            (x : xs) -> (Just x, (start ++ [x], xs))
+            _ -> (Nothing, (start, end))
+        )
+    consumeWhile' = do
+      c <- consumeOne
+      (start, end) <- get
+
+      case c of
+        Just c ->
+          if stopWord `isSuffixOf` start
+            then put (take (length start - length stopWord) start, end)
+            else consumeWhile'
+        Nothing -> return ()
+
+      return ()
