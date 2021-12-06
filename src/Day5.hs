@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Day5 (part1) where
+module Day5 (part1, part2) where
 
 import AOC
 import Control.Applicative
@@ -19,16 +19,16 @@ instance Ord Point where
     | otherwise = x0 `compare` x1
 
 part1 :: [String] -> String
-part1 = show . length . getOverlappingPoints . getCoveredPoints
+part1 = solve fillInRange
+
+part2 :: [String] -> String
+part2 = solve fillInRangeWithDiagonals
+
+solve :: (Range -> [Point]) -> [String] -> String
+solve fill = show . length . getOverlappingPoints . join . map fill . parseRanges
 
 getOverlappingPoints :: [Point] -> [(Point, Int)]
 getOverlappingPoints = filter ((> 1) . snd) . M.toList . foldl (flip (uncurry (M.insertWith (+)))) M.empty . map (,1)
-
-getCoveredPoints :: [String] -> [Point]
-getCoveredPoints = join . fillInRanges . parseRanges
-
-fillInRanges :: [Range] -> [[Point]]
-fillInRanges = map fillInRange
 
 fillInRange :: Range -> [Point]
 fillInRange (Range (Point x0 y0) (Point x1 y1))
@@ -37,6 +37,14 @@ fillInRange (Range (Point x0 y0) (Point x1 y1))
   | y0 == y1 && x0 < x1 = getZipList $ Point <$> ZipList [x0 .. x1] <*> ZipList (repeat y0)
   | y0 == y1 && x0 > x1 = getZipList $ Point <$> ZipList [x1 .. x0] <*> ZipList (repeat y0)
   | otherwise = []
+
+fillInRangeWithDiagonals :: Range -> [Point]
+fillInRangeWithDiagonals (Range (Point x0 y0) (Point x1 y1))
+  | x0 == x1 || y0 == y1 = fillInRange (Range (Point x0 y0) (Point x1 y1))
+  | otherwise =
+    let xs = (if x1 > x0 then id else reverse) (if x1 > x0 then [x0 .. x1] else [x1 .. x0])
+        ys = (if y1 > y0 then id else reverse) (if y1 > y0 then [y0 .. y1] else [y1 .. y0])
+     in getZipList $ Point <$> ZipList xs <*> ZipList ys
 
 parseRanges :: [String] -> [Range]
 parseRanges = map parseRange
