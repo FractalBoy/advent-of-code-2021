@@ -1,5 +1,6 @@
 module Day4 (part1, part2) where
 
+import AOC
 import Data.List
 
 data BingoCell = BingoCell {number :: Int, marked :: Bool}
@@ -95,9 +96,3 @@ parseCard = reverse . foldl (\acc x -> createRow (words x) : acc) []
 
 parseDrawings :: String -> [Int]
 parseDrawings = map read . split ','
-
-split :: (Eq a) => a -> [a] -> [[a]]
-split _ [] = []
-split delim string =
-  let (before, after) = span (/= delim) string
-   in before : split delim (drop 1 after)

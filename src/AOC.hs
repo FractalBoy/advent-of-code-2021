@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AOC (getInput, consumeUntilSequence) where
+module AOC (getInput, consumeUntilSequence, split) where
 
 import Configuration.Dotenv
 import Control.Monad
@@ -56,3 +56,9 @@ consumeUntilSequence stopWord = do
         Nothing -> return ()
 
       return ()
+
+split :: (Eq a) => a -> [a] -> [[a]]
+split _ [] = []
+split delim string =
+  let (before, after) = span (/= delim) string
+   in before : split delim (drop 1 after)
