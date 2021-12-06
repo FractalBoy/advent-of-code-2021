@@ -42,8 +42,8 @@ fillInRangeWithDiagonals :: Range -> [Point]
 fillInRangeWithDiagonals (Range (Point x0 y0) (Point x1 y1))
   | x0 == x1 || y0 == y1 = fillInRange (Range (Point x0 y0) (Point x1 y1))
   | otherwise =
-    let xs = (if x1 > x0 then id else reverse) (if x1 > x0 then [x0 .. x1] else [x1 .. x0])
-        ys = (if y1 > y0 then id else reverse) (if y1 > y0 then [y0 .. y1] else [y1 .. y0])
+    let xs = if x1 > x0 then [x0 .. x1] else [x0, (x0 - 1) .. x1]
+        ys = if y1 > y0 then [y0 .. y1] else [y0, (y0 - 1) .. y1]
      in getZipList $ Point <$> ZipList xs <*> ZipList ys
 
 parseRanges :: [String] -> [Range]
