@@ -15,8 +15,8 @@ simulateDays n = execState (replicateM n simulateDay)
 
 simulateDay :: State [Int] ()
 simulateDay = do
-  fishMap <- get
-  put $ take 6 (tail fishMap) ++ [head fishMap + fishMap !! 7] ++ [fishMap !! 8, head fishMap]
+  fish <- get
+  put $ take 6 (tail fish) ++ [head fish + fish !! 7] ++ [fish !! 8, head fish]
   return ()
 
 parseFish :: String -> [Int]
