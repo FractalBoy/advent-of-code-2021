@@ -4,8 +4,7 @@ module Day5 (part1, part2) where
 
 import AOC
 import Control.Applicative
-import Control.Monad.State.Lazy
-import Data.List
+import Control.Monad.State
 import qualified Data.Map as M
 
 data Point = Point Int Int deriving (Show, Eq)

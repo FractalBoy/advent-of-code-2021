@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Day6 (part1, part2) where
 
 import AOC
@@ -24,7 +22,18 @@ simulateDays n = execState (replicateM n simulateDay)
 simulateDay :: State FishMap ()
 simulateDay = do
   fishMap <- get
-  put FishMap {day0 = day1 fishMap, day1 = day2 fishMap, day2 = day3 fishMap, day3 = day4 fishMap, day4 = day5 fishMap, day5 = day6 fishMap, day6 = day7 fishMap + day0 fishMap, day7 = day8 fishMap, day8 = day0 fishMap}
+  put
+    FishMap
+      { day0 = day1 fishMap,
+        day1 = day2 fishMap,
+        day2 = day3 fishMap,
+        day3 = day4 fishMap,
+        day4 = day5 fishMap,
+        day5 = day6 fishMap,
+        day6 = day7 fishMap + day0 fishMap,
+        day7 = day8 fishMap,
+        day8 = day0 fishMap
+      }
   return ()
 
 parseFish :: String -> FishMap
