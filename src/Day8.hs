@@ -8,19 +8,6 @@ import qualified Data.Set as Set
 
 data InputOutput = InputOutput {input :: [String], output :: [String]} deriving (Show)
 
-mapDifferencesToDigit :: (Int, Int) -> (Int, Int) -> (Int, Int) -> Int
-mapDifferencesToDigit (4, 0) (3, 1) (3, 0) = 0
-mapDifferencesToDigit (0, 0) _ _ = 1
-mapDifferencesToDigit (4, 1) (3, 2) (3, 1) = 2
-mapDifferencesToDigit (3, 0) (2, 1) (2, 0) = 3
-mapDifferencesToDigit _ (0, 0) _ = 4
-mapDifferencesToDigit (4, 1) (2, 1) (3, 1) = 5
-mapDifferencesToDigit (5, 1) (3, 1) (4, 1) = 6
-mapDifferencesToDigit _ _ (0, 0) = 7
-mapDifferencesToDigit (0, _) (0, _) (0, _) = 8
-mapDifferencesToDigit (4, 0) (2, 0) (3, 0) = 9
-mapDifferencesToDigit _ _ _ = undefined
-
 part1 :: [String] -> String
 part1 =
   show
@@ -63,6 +50,19 @@ decodeInput (InputOutput inp _) =
                 )
             )
             unknowns
+
+mapDifferencesToDigit :: (Int, Int) -> (Int, Int) -> (Int, Int) -> Int
+mapDifferencesToDigit (4, 0) (3, 1) (3, 0) = 0
+mapDifferencesToDigit (0, 0) _ _ = 1
+mapDifferencesToDigit (4, 1) (3, 2) (3, 1) = 2
+mapDifferencesToDigit (3, 0) (2, 1) (2, 0) = 3
+mapDifferencesToDigit _ (0, 0) _ = 4
+mapDifferencesToDigit (4, 1) (2, 1) (3, 1) = 5
+mapDifferencesToDigit (5, 1) (3, 1) (4, 1) = 6
+mapDifferencesToDigit _ _ (0, 0) = 7
+mapDifferencesToDigit (0, _) (0, _) (0, _) = 8
+mapDifferencesToDigit (4, 0) (2, 0) (3, 0) = 9
+mapDifferencesToDigit _ _ _ = undefined
 
 getKnownSegments :: [String] -> (String, String, String, String) -- 1, 4, 7, 8
 getKnownSegments segs =
