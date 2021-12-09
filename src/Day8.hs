@@ -37,21 +37,19 @@ decodeOutput :: M.Map String Int -> InputOutput -> Int
 decodeOutput decoder (InputOutput _ o) = read $ concatMap (\unknown -> show $ fromJust $ M.lookup (Set.toList $ Set.fromList unknown) decoder) o
 
 decodeInput :: InputOutput -> M.Map String Int
-decodeInput (InputOutput i _) =
-  let (one, four, seven, eight) = getTupleOfSet $ getKnownSegments i
-      unknowns = map Set.fromList $ getUnknownSegments i
+decodeInput (InputOutput inp _) =
+  let (one, four, seven, eight) = getTupleOfSet $ getKnownSegments inp
+      unknowns = map Set.fromList $ getUnknownSegments inp
    in M.fromList $
         [(Set.toList one, 1), (Set.toList four, 4), (Set.toList seven, 7), (Set.toList eight, 8)]
           ++ map
-            ( (\(unknown, (one, four, seven)) -> (Set.toList unknown, mapDifferencesToDigit one four seven))
-                . ( \unknown ->
-                      ( unknown,
-                        ( (length $ Set.difference unknown one, length $ Set.difference one unknown),
-                          (length $ Set.difference unknown four, length $ Set.difference four unknown),
-                          (length $ Set.difference unknown seven, length $ Set.difference seven unknown)
-                        )
-                      )
-                  )
+            ( \unknown ->
+                ( Set.toList unknown,
+                  mapDifferencesToDigit
+                    (getStringDifference one unknown)
+                    (getStringDifference four unknown)
+                    (getStringDifference seven unknown)
+                )
             )
             unknowns
 
@@ -62,13 +60,18 @@ getUnknownSegments :: [String] -> [String]
 getUnknownSegments = filter (\seg -> let len = length seg in len /= 2 && len /= 4 && len /= 3 && len /= 7)
 
 getAllKnownSegments :: [String] -> ([String], [String], [String], [String])
-getAllKnownSegments segs = (filter (\seg -> length seg == 2) segs, filter (\seg -> length seg == 4) segs, filter (\seg -> length seg == 3) segs, filter (\seg -> length seg == 7) segs)
+getAllKnownSegments segs =
+  ( filterByLength 2 segs,
+    filterByLength 4 segs,
+    filterByLength 3 segs,
+    filterByLength 7 segs
+  )
 
-getStringDifference :: String -> String -> (Int, Int)
-getStringDifference a b =
-  let setA = Set.fromList a
-      setB = Set.fromList b
-   in (length $ Set.difference setB setA, length $ Set.difference setA setB)
+filterByLength :: Int -> [[a]] -> [[a]]
+filterByLength len = filter (\x -> length x == len)
+
+getStringDifference :: Set.Set Char -> Set.Set Char -> (Int, Int)
+getStringDifference a b = (length $ Set.difference b a, length $ Set.difference a b)
 
 getTupleOfSet :: (Ord a) => ([a], [a], [a], [a]) -> (Set.Set a, Set.Set a, Set.Set a, Set.Set a)
 getTupleOfSet (a, b, c, d) = (Set.fromList a, Set.fromList b, Set.fromList c, Set.fromList d)
