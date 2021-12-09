@@ -22,7 +22,11 @@ mapDifferencesToDigit (4, 0) (2, 0) (3, 0) = 9
 mapDifferencesToDigit _ _ _ = undefined
 
 part1 :: [String] -> String
-part1 = show . foldl (\acc (one, four, seven, eight) -> acc + sum (map length [one, four, seven, eight])) 0 . map (getAllKnownSegments . output) . parseInput
+part1 =
+  show
+    . sum
+    . map (sumTuple . mapTuple length . getAllKnownSegments . output)
+    . parseInput
 
 part2 :: [String] -> String
 part2 = show . sum . decodeAllInputOutput . parseInput
@@ -34,30 +38,39 @@ decodeInputOutput :: InputOutput -> Int
 decodeInputOutput io = decodeOutput (decodeInput io) io
 
 decodeOutput :: M.Map String Int -> InputOutput -> Int
-decodeOutput decoder (InputOutput _ o) = read $ concatMap (\unknown -> show $ fromJust $ M.lookup (Set.toList $ Set.fromList unknown) decoder) o
+decodeOutput decoder (InputOutput _ o) =
+  read $
+    concatMap
+      ( \unknown ->
+          show $ fromJust $ M.lookup (Set.toList $ Set.fromList unknown) decoder
+      )
+      o
 
 decodeInput :: InputOutput -> M.Map String Int
 decodeInput (InputOutput inp _) =
-  let (one, four, seven, eight) = getTupleOfSet $ getKnownSegments inp
+  let knowns@(one, four, seven, eight) = getKnownSegments inp
+      (oneSet, fourSet, sevenSet, eightSet) = mapTuple Set.fromList knowns
       unknowns = map Set.fromList $ getUnknownSegments inp
    in M.fromList $
-        [(Set.toList one, 1), (Set.toList four, 4), (Set.toList seven, 7), (Set.toList eight, 8)]
+        [(one, 1), (four, 4), (seven, 7), (eight, 8)]
           ++ map
             ( \unknown ->
                 ( Set.toList unknown,
                   mapDifferencesToDigit
-                    (getStringDifference one unknown)
-                    (getStringDifference four unknown)
-                    (getStringDifference seven unknown)
+                    (getStringDifference oneSet unknown)
+                    (getStringDifference fourSet unknown)
+                    (getStringDifference sevenSet unknown)
                 )
             )
             unknowns
 
 getKnownSegments :: [String] -> (String, String, String, String) -- 1, 4, 7, 8
-getKnownSegments segs = let (one, four, seven, eight) = getAllKnownSegments segs in (head one, head four, head seven, head eight)
+getKnownSegments segs =
+  let (one, four, seven, eight) = getAllKnownSegments segs
+   in (head one, head four, head seven, head eight)
 
 getUnknownSegments :: [String] -> [String]
-getUnknownSegments = filter (\seg -> let len = length seg in len /= 2 && len /= 4 && len /= 3 && len /= 7)
+getUnknownSegments = filter (\seg -> length seg `notElem` [2, 3, 4, 7])
 
 getAllKnownSegments :: [String] -> ([String], [String], [String], [String])
 getAllKnownSegments segs =
@@ -75,6 +88,12 @@ getStringDifference a b = (length $ Set.difference b a, length $ Set.difference 
 
 getTupleOfSet :: (Ord a) => ([a], [a], [a], [a]) -> (Set.Set a, Set.Set a, Set.Set a, Set.Set a)
 getTupleOfSet (a, b, c, d) = (Set.fromList a, Set.fromList b, Set.fromList c, Set.fromList d)
+
+mapTuple :: (a -> b) -> (a, a, a, a) -> (b, b, b, b)
+mapTuple f (a, b, c, d) = (f a, f b, f c, f d)
+
+sumTuple :: (Int, Int, Int, Int) -> Int
+sumTuple (a, b, c, d) = a + b + c + d
 
 parseInput :: [String] -> [InputOutput]
 parseInput = map parseLine
