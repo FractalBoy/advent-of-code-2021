@@ -1,23 +1,12 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Day8 (part1, part2) where
 
 import AOC
 import Control.Monad.State
-import Data.List (find)
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as Set
 
-type Signal = String
-
-type Wire = Char
-
-type InputSignal = [Signal]
-
-type OutputSignal = [Signal]
-
-data InputOutput = InputOutput {input :: InputSignal, output :: OutputSignal} deriving (Show)
+data InputOutput = InputOutput {input :: [String], output :: [String]} deriving (Show)
 
 mapDifferencesToDigit :: (Int, Int) -> (Int, Int) -> (Int, Int) -> Int
 mapDifferencesToDigit (4, 0) (3, 1) (3, 0) = 0
@@ -35,28 +24,36 @@ mapDifferencesToDigit _ _ _ = undefined
 part1 :: [String] -> String
 part1 = show . foldl (\acc (one, four, seven, eight) -> acc + sum (map length [one, four, seven, eight])) 0 . map (getAllKnownSegments . output) . parseInput
 
-part2 :: IO String
-part2 = do
-  --  input <- parseInput . lines <$> readFile "/home/mreisner/advent-of-code-2021/sample.txt"
-  let i = parseLine "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
-  let (one, four, seven, eight) = getTupleOfSet $ getKnownSegments $ input i
-  let unknown = map Set.fromList $ getUnknownSegments $ input i
-  let differences =
-        map
-          ( \u ->
-              ( u,
-                ( (length $ Set.difference u one, length $ Set.difference one u),
-                  (length $ Set.difference u four, length $ Set.difference four u),
-                  (length $ Set.difference u seven, length $ Set.difference seven u)
-                )
-              )
-          )
-          unknown
+part2 :: [String] -> String
+part2 = show . sum . decodeAllInputOutput . parseInput
 
-  let y = map (\(letter, (one, four, seven)) -> (letter, mapDifferencesToDigit one four seven)) differences
+decodeAllInputOutput :: [InputOutput] -> [Int]
+decodeAllInputOutput = map decodeInputOutput
 
-  print y
-  return ""
+decodeInputOutput :: InputOutput -> Int
+decodeInputOutput io = decodeOutput (decodeInput io) io
+
+decodeOutput :: M.Map String Int -> InputOutput -> Int
+decodeOutput decoder (InputOutput _ o) = read $ concatMap (\unknown -> show $ fromJust $ M.lookup (Set.toList $ Set.fromList unknown) decoder) o
+
+decodeInput :: InputOutput -> M.Map String Int
+decodeInput (InputOutput i _) =
+  let (one, four, seven, eight) = getTupleOfSet $ getKnownSegments i
+      unknowns = map Set.fromList $ getUnknownSegments i
+   in M.fromList $
+        [(Set.toList one, 1), (Set.toList four, 4), (Set.toList seven, 7), (Set.toList eight, 8)]
+          ++ map
+            ( (\(unknown, (one, four, seven)) -> (Set.toList unknown, mapDifferencesToDigit one four seven))
+                . ( \unknown ->
+                      ( unknown,
+                        ( (length $ Set.difference unknown one, length $ Set.difference one unknown),
+                          (length $ Set.difference unknown four, length $ Set.difference four unknown),
+                          (length $ Set.difference unknown seven, length $ Set.difference seven unknown)
+                        )
+                      )
+                  )
+            )
+            unknowns
 
 getKnownSegments :: [String] -> (String, String, String, String) -- 1, 4, 7, 8
 getKnownSegments segs = let (one, four, seven, eight) = getAllKnownSegments segs in (head one, head four, head seven, head eight)

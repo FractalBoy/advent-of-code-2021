@@ -79,7 +79,7 @@ solve 6 2 xs = MaybeT $ return $ Just $ Day6.part2 $ lines xs
 solve 7 1 xs = MaybeT $ return $ Just $ Day7.part1 $ lines xs
 solve 7 2 xs = MaybeT $ return $ Just $ Day7.part2 $ lines xs
 solve 8 1 xs = MaybeT $ return $ Just $ Day8.part1 $ lines xs
-solve 8 2 xs = lift Day8.part2
+solve 8 2 xs = MaybeT $ return $ Just $ Day8.part2 $ lines xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing
