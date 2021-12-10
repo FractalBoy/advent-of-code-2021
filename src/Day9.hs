@@ -1,7 +1,6 @@
 module Day9 (part1, part2) where
 
 import Control.Monad
-import Control.Monad.State
 import Data.Char
 import Data.List
 import qualified Data.Map as M
@@ -9,14 +8,6 @@ import Data.Maybe
 import qualified Data.Set as Set
 
 type HeightMap = M.Map (Int, Int) Int
-
-heightmap =
-  [ "2199943210",
-    "3987894921",
-    "9856789892",
-    "8767896789",
-    "9899965678"
-  ]
 
 part1 :: [String] -> String
 part1 input =
@@ -42,7 +33,7 @@ isLowPoint m (y, x) =
   let neighbors = map (($ m) . M.lookup) $ getNeighbors (y, x)
       point = M.lookup (y, x) m
    in all
-        (Data.Maybe.fromMaybe True . (\neighbor -> (<) <$> point <*> neighbor))
+        (fromMaybe True . (\neighbor -> (<) <$> point <*> neighbor))
         neighbors
 
 getBasinFromLowPoint :: HeightMap -> (Int, Int) -> [(Int, Int)]
