@@ -6,6 +6,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Semigroup ((<>))
 import qualified Day1
+import qualified Day10
 import qualified Day2
 import qualified Day3
 import qualified Day4
@@ -61,28 +62,30 @@ main = do
 showSolution :: Int -> Int -> String -> IO ()
 showSolution day part input = void $
   runMaybeT $ do
-    solution <- solve day part input
+    solution <- solve day part (lines input)
     lift $ putStrLn solution
 
-solve :: Int -> Int -> String -> MaybeT IO String
-solve 1 1 xs = MaybeT $ return $ Just $ Day1.part1 $ lines xs
-solve 1 2 xs = MaybeT $ return $ Just $ Day1.part2 $ lines xs
-solve 2 1 xs = MaybeT $ return $ Just $ Day2.part1 $ lines xs
-solve 2 2 xs = MaybeT $ return $ Just $ Day2.part2 $ lines xs
-solve 3 1 xs = MaybeT $ return $ Just $ Day3.part1 $ lines xs
-solve 3 2 xs = MaybeT $ return $ Just $ Day3.part2 $ lines xs
-solve 4 1 xs = MaybeT $ return $ Day4.part1 $ lines xs
-solve 4 2 xs = MaybeT $ return $ Day4.part2 $ lines xs
-solve 5 1 xs = MaybeT $ return $ Just $ Day5.part1 $ lines xs
-solve 5 2 xs = MaybeT $ return $ Just $ Day5.part2 $ lines xs
-solve 6 1 xs = MaybeT $ return $ Just $ Day6.part1 $ lines xs
-solve 6 2 xs = MaybeT $ return $ Just $ Day6.part2 $ lines xs
-solve 7 1 xs = MaybeT $ return $ Just $ Day7.part1 $ lines xs
-solve 7 2 xs = MaybeT $ return $ Just $ Day7.part2 $ lines xs
-solve 8 1 xs = MaybeT $ return $ Just $ Day8.part1 $ lines xs
-solve 8 2 xs = MaybeT $ return $ Just $ Day8.part2 $ lines xs
-solve 9 1 xs = MaybeT $ return $ Just $ Day9.part1 $ lines xs
-solve 9 2 xs = MaybeT $ return $ Just $ Day9.part2 $ lines xs
+solve :: Int -> Int -> [String] -> MaybeT IO String
+solve 1 1 xs = MaybeT $ return $ Just $ Day1.part1 xs
+solve 1 2 xs = MaybeT $ return $ Just $ Day1.part2 xs
+solve 2 1 xs = MaybeT $ return $ Just $ Day2.part1 xs
+solve 2 2 xs = MaybeT $ return $ Just $ Day2.part2 xs
+solve 3 1 xs = MaybeT $ return $ Just $ Day3.part1 xs
+solve 3 2 xs = MaybeT $ return $ Just $ Day3.part2 xs
+solve 4 1 xs = MaybeT $ return $ Day4.part1 xs
+solve 4 2 xs = MaybeT $ return $ Day4.part2 xs
+solve 5 1 xs = MaybeT $ return $ Just $ Day5.part1 xs
+solve 5 2 xs = MaybeT $ return $ Just $ Day5.part2 xs
+solve 6 1 xs = MaybeT $ return $ Just $ Day6.part1 xs
+solve 6 2 xs = MaybeT $ return $ Just $ Day6.part2 xs
+solve 7 1 xs = MaybeT $ return $ Just $ Day7.part1 xs
+solve 7 2 xs = MaybeT $ return $ Just $ Day7.part2 xs
+solve 8 1 xs = MaybeT $ return $ Just $ Day8.part1 xs
+solve 8 2 xs = MaybeT $ return $ Just $ Day8.part2 xs
+solve 9 1 xs = MaybeT $ return $ Just $ Day9.part1 xs
+solve 9 2 xs = MaybeT $ return $ Just $ Day9.part2 xs
+solve 10 1 xs = MaybeT $ return $ Just $ Day10.part1 xs
+solve 10 2 xs = MaybeT $ return $ Just $ Day10.part2 xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing
