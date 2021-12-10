@@ -1,28 +1,67 @@
-module Day9 (part1) where
+module Day9 (part1, part2) where
 
 import Control.Monad
+import Control.Monad.State
 import Data.Char
+import Data.List
 import qualified Data.Map as M
-import qualified Data.Maybe
+import Data.Maybe
+import qualified Data.Set as Set
+
+type HeightMap = M.Map (Int, Int) Int
+
+heightmap =
+  [ "2199943210",
+    "3987894921",
+    "9856789892",
+    "8767896789",
+    "9899965678"
+  ]
 
 part1 :: [String] -> String
-part1 = show . sum . map (+ 1) . getLowPoints
+part1 input =
+  let hm = getHeightMap input
+   in show $ sum $ map ((+ 1) . fromMaybe 0 . (($ hm) . M.lookup)) $ getLowPoints hm
 
-getHeightMap :: [String] -> M.Map (Int, Int) Int
+part2 :: [String] -> String
+part2 input =
+  let hm = getHeightMap input
+   in show $ product $ take 3 $ reverse $ sort $ map (length . getBasinFromLowPoint hm) $ getLowPoints hm
+
+getHeightMap :: [String] -> HeightMap
 getHeightMap = M.fromList . join . zipWith (\y str -> zipWith (\x c -> ((y, x), digitToInt c)) [0 ..] str) [0 ..]
 
 getNeighbors :: (Int, Int) -> [(Int, Int)]
 getNeighbors (y, x) = [(y - 1, x), (y, x - 1), (y + 1, x), (y, x + 1)]
 
-getLowPoints :: [String] -> [Int]
-getLowPoints input =
-  let map = getHeightMap input
-   in M.elems $ M.filterWithKey (\k _ -> isLowPoint map k) map
+getLowPoints :: HeightMap -> [(Int, Int)]
+getLowPoints m = M.keys $ M.filterWithKey (\k _ -> isLowPoint m k) m
 
-isLowPoint :: M.Map (Int, Int) Int -> (Int, Int) -> Bool
+isLowPoint :: HeightMap -> (Int, Int) -> Bool
 isLowPoint m (y, x) =
   let neighbors = map (($ m) . M.lookup) $ getNeighbors (y, x)
       point = M.lookup (y, x) m
    in all
         (Data.Maybe.fromMaybe True . (\neighbor -> (<) <$> point <*> neighbor))
         neighbors
+
+getBasinFromLowPoint :: HeightMap -> (Int, Int) -> [(Int, Int)]
+getBasinFromLowPoint m lowPoint = Set.toList $ getBasinFromLowPoint' m (Set.fromList [lowPoint]) Set.empty
+  where
+    getBasinFromLowPoint' m visit visited =
+      case Set.toList visit of
+        [] -> visited
+        (current : remaining) ->
+          if Set.member current visited
+            then getBasinFromLowPoint' m (Set.fromList remaining) visited
+            else
+              let visited' = Set.insert current visited
+               in getBasinFromLowPoint' m (Set.fromList $ remaining ++ unvisitedNeighbors) visited'
+          where
+            unvisitedNeighbors =
+              filter
+                ( \neighbor ->
+                    let value = M.lookup neighbor m
+                     in (isJust value && value /= Just 9)
+                )
+                $ getNeighbors current
