@@ -47,12 +47,11 @@ getBasinFromLowPoint m lowPoint = Set.toList $ getBasinFromLowPoint' m (Set.from
             then getBasinFromLowPoint' m (Set.fromList remaining) visited
             else
               let visited' = Set.insert current visited
+                  unvisitedNeighbors =
+                    filter
+                      ( \neighbor ->
+                          let value = M.lookup neighbor m
+                           in (isJust value && value /= Just 9)
+                      )
+                      $ getNeighbors current
                in getBasinFromLowPoint' m (Set.fromList $ remaining ++ unvisitedNeighbors) visited'
-          where
-            unvisitedNeighbors =
-              filter
-                ( \neighbor ->
-                    let value = M.lookup neighbor m
-                     in (isJust value && value /= Just 9)
-                )
-                $ getNeighbors current
