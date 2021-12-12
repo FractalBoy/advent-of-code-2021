@@ -27,9 +27,7 @@ allFlashing :: NumberGrid -> Bool
 allFlashing = all ((== 0) . snd) . M.toList
 
 simulateSteps :: Int -> NumberGrid -> Int
-simulateSteps n grid =
-  let (flashed, _) = runState (replicateM n performStep) (grid, [])
-   in sum flashed
+simulateSteps n grid = sum $ evalState (replicateM n performStep) (grid, [])
 
 performStep :: State (NumberGrid, [(Int, Int)]) Int
 performStep = do
