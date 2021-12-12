@@ -2,8 +2,7 @@ module Day12 (part1, part2) where
 
 import AOC
 import Control.Monad
-import Data.Char (isLower, isUpper)
-import Data.List
+import Data.Char
 import qualified Data.Map as M
 
 type CaveMap = M.Map String [String]
