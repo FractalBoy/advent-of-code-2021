@@ -1,25 +1,30 @@
-module Day11 (part1) where
+module Day11 (part1, part2) where
 
 import AOC (NumberGrid, getNumberGrid)
 import Control.Monad.State
 import Data.Bifunctor
 import qualified Data.Map as M
 
-example =
-  [ "5483143223",
-    "2745854711",
-    "5264556173",
-    "6141336146",
-    "6357385478",
-    "4167524645",
-    "2176841721",
-    "6882881134",
-    "4846848554",
-    "5283751526"
-  ]
-
 part1 :: [String] -> String
 part1 = show . simulateSteps 100 . getNumberGrid
+
+part2 :: [String] -> String
+part2 = show . simulateUntilComplete . getNumberGrid
+
+simulateUntilComplete :: NumberGrid -> Int
+simulateUntilComplete grid = evalState (performStepAndCheck 0) (grid, [])
+
+performStepAndCheck :: Int -> State (NumberGrid, [(Int, Int)]) Int
+performStepAndCheck step = do
+  performStep
+  (grid, _) <- get
+
+  if allFlashing grid
+    then return $ step + 1
+    else performStepAndCheck $ step + 1
+
+allFlashing :: NumberGrid -> Bool
+allFlashing = all ((== 0) . snd) . M.toList
 
 simulateSteps :: Int -> NumberGrid -> Int
 simulateSteps n grid =
@@ -40,9 +45,9 @@ increaseAdjacentEnergyLevels :: (Int, Int) -> State (NumberGrid, [(Int, Int)]) (
 increaseAdjacentEnergyLevels coord = do
   mapM_
     ( \adj -> do
-        (grid, visited) <- get
+        (grid, flashed) <- get
         let grid' = M.adjust (+ 1) adj grid
-        put (grid', visited)
+        put (grid', flashed)
         return ()
     )
     $ getAdjacentOctopi coord
