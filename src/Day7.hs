@@ -9,7 +9,7 @@ part1 :: [String] -> String
 part1 = solve id
 
 part2 :: [String] -> String
-part2 = solve (\x -> sum [0 .. x])
+part2 = solve (\x -> x * (x + 1) `div` 2)
 
 solve :: (Int -> Int) -> [String] -> String
 solve rateFunction input =
