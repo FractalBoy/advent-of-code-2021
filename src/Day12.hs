@@ -46,9 +46,6 @@ isBigCave = all isUpper
 isSmallCave :: String -> Bool
 isSmallCave = all isLower
 
-canVisitTwice :: String -> Bool
-canVisitTwice cave = isSmallCave cave && cave /= "start" && cave /= "end"
-
 haveVisitedSmallCaveTwice :: [String] -> Bool
 haveVisitedSmallCaveTwice = not . null . M.filter (> 1) . foldl (\acc cave -> M.insertWith (+) cave 1 acc) M.empty . filter isSmallCave
 
