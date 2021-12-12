@@ -33,12 +33,11 @@ canVisitCave cave visited = isBigCave cave || cave `notElem` visited
 
 canVisitCaveModified :: String -> [String] -> Bool
 canVisitCaveModified cave visited =
-  cave == "start" && null visited
-    || cave /= "start"
-      && ( isBigCave cave
-             || cave `notElem` visited
-             || not (haveVisitedSmallCaveTwice visited)
-         )
+  isBigCave cave
+    || cave == "start"
+    && null visited
+      || cave /= "start"
+    && (cave `notElem` visited || not (haveVisitedSmallCaveTwice visited))
 
 isBigCave :: String -> Bool
 isBigCave = all isUpper
