@@ -9,19 +9,19 @@ part1 :: [String] -> String
 part1 = show . simulateSteps 100 . getNumberGrid
 
 part2 :: [String] -> String
-part2 = show . simulateUntilComplete . getNumberGrid
+part2 = show . simulateUntilAllFlash . getNumberGrid
 
-simulateUntilComplete :: NumberGrid -> Int
-simulateUntilComplete grid = evalState (performStepAndCheck 0) (grid, [])
+simulateUntilAllFlash :: NumberGrid -> Int
+simulateUntilAllFlash grid = evalState (performStepAndCheckIfAllFlashing 0) (grid, [])
 
-performStepAndCheck :: Int -> State (NumberGrid, [(Int, Int)]) Int
-performStepAndCheck step = do
+performStepAndCheckIfAllFlashing :: Int -> State (NumberGrid, [(Int, Int)]) Int
+performStepAndCheckIfAllFlashing step = do
   performStep
   (grid, _) <- get
 
   if allFlashing grid
     then return $ step + 1
-    else performStepAndCheck $ step + 1
+    else performStepAndCheckIfAllFlashing $ step + 1
 
 allFlashing :: NumberGrid -> Bool
 allFlashing = all ((== 0) . snd) . M.toList
