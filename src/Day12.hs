@@ -19,7 +19,9 @@ findPaths canVisit caveMap = findPaths' [] "start"
     findPaths' :: [String] -> String -> [[String]]
     findPaths' visited cave =
       let neighbors = M.lookup cave caveMap
-          getNeighboringPaths = join $ maybe [] (map $ findPaths' (cave : visited)) neighbors
+          getNeighboringPaths =
+            join $
+              maybe [] (map $ findPaths' (cave : visited)) neighbors
        in if cave == "end"
             then [reverse (cave : visited)]
             else
@@ -45,7 +47,11 @@ isSmallCave :: String -> Bool
 isSmallCave = all isLower
 
 haveVisitedSmallCaveTwice :: [String] -> Bool
-haveVisitedSmallCaveTwice = not . null . M.filter (> 1) . foldl (\acc cave -> M.insertWith (+) cave 1 acc) M.empty . filter isSmallCave
+haveVisitedSmallCaveTwice =
+  not . null
+    . M.filter (> 1)
+    . foldl (\acc cave -> M.insertWith (+) cave 1 acc) M.empty
+    . filter isSmallCave
 
 parseInput :: [String] -> CaveMap
 parseInput = foldl addToCaveMap M.empty . map ((\[a, b] -> (a, b)) . split '-')
