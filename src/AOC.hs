@@ -1,17 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AOC (getInput, consumeUntilSequence, split) where
+module AOC
+  ( getInput,
+    consumeUntilSequence,
+    split,
+    getNumberGrid,
+    NumberGrid,
+  )
+where
 
 import Configuration.Dotenv
 import Control.Monad
 import Control.Monad.State.Lazy
 import Data.ByteString.Internal (packChars)
 import Data.ByteString.Lazy.Char8 (unpack)
+import Data.Char
 import Data.List
+import qualified Data.Map as M
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Header
 import System.Environment (getEnv)
+
+type NumberGrid = M.Map (Int, Int) Int
 
 getInput :: Int -> IO String
 getInput day = do
@@ -62,3 +73,9 @@ split _ [] = []
 split delim string =
   let (before, after) = span (/= delim) string
    in before : split delim (drop 1 after)
+
+getNumberGrid :: [String] -> NumberGrid
+getNumberGrid =
+  M.fromList
+    . join
+    . zipWith (\y str -> zipWith (\x c -> ((y, x), digitToInt c)) [0 ..] str) [0 ..]

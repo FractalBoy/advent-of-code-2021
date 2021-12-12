@@ -7,6 +7,7 @@ import Control.Monad.Trans.Maybe
 import Data.Semigroup ((<>))
 import qualified Day1
 import qualified Day10
+import qualified Day11
 import qualified Day2
 import qualified Day3
 import qualified Day4
@@ -86,6 +87,7 @@ solve 9 1 xs = MaybeT $ return $ Just $ Day9.part1 xs
 solve 9 2 xs = MaybeT $ return $ Just $ Day9.part2 xs
 solve 10 1 xs = MaybeT $ return $ Just $ Day10.part1 xs
 solve 10 2 xs = MaybeT $ return $ Just $ Day10.part2 xs
+solve 11 1 xs = MaybeT $ return $ Just $ Day11.part1 xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing

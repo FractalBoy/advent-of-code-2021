@@ -1,5 +1,6 @@
 module Day9 (part1, part2) where
 
+import AOC (getNumberGrid)
 import Control.Monad
 import Data.Char
 import Data.List
@@ -11,16 +12,13 @@ type HeightMap = M.Map (Int, Int) Int
 
 part1 :: [String] -> String
 part1 input =
-  let hm = getHeightMap input
+  let hm = getNumberGrid input
    in show $ sum $ map ((+ 1) . fromMaybe 0 . (($ hm) . M.lookup)) $ getLowPoints hm
 
 part2 :: [String] -> String
 part2 input =
-  let hm = getHeightMap input
+  let hm = getNumberGrid input
    in show $ product $ take 3 $ reverse $ sort $ map (length . getBasinFromLowPoint hm) $ getLowPoints hm
-
-getHeightMap :: [String] -> HeightMap
-getHeightMap = M.fromList . join . zipWith (\y str -> zipWith (\x c -> ((y, x), digitToInt c)) [0 ..] str) [0 ..]
 
 getNeighbors :: (Int, Int) -> [(Int, Int)]
 getNeighbors (y, x) = [(y - 1, x), (y, x - 1), (y + 1, x), (y, x + 1)]
