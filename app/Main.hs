@@ -9,6 +9,7 @@ import qualified Day1
 import qualified Day10
 import qualified Day11
 import qualified Day12
+import qualified Day13
 import qualified Day2
 import qualified Day3
 import qualified Day4
@@ -92,6 +93,8 @@ solve 11 1 xs = MaybeT $ return $ Just $ Day11.part1 xs
 solve 11 2 xs = MaybeT $ return $ Just $ Day11.part2 xs
 solve 12 1 xs = MaybeT $ return $ Just $ Day12.part1 xs
 solve 12 2 xs = MaybeT $ return $ Just $ Day12.part2 xs
+solve 13 1 xs = MaybeT $ return $ Just $ Day13.part1 xs
+solve 13 2 xs = MaybeT $ return $ Just $ Day13.part2 xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing
