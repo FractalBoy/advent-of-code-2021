@@ -2,6 +2,7 @@ module Day13 (part1, part2) where
 
 import AOC
 import Control.Monad
+import Data.List
 import qualified Data.Set as Set
 
 data Axis = X | Y
@@ -36,12 +37,16 @@ drawGrid points =
           allPoints
 
 doFold :: [(Int, Int)] -> (Axis, Int) -> [(Int, Int)]
-doFold points fold@(X, value) = (Set.toList . Set.fromList) $ filter ((< value) . fst) points ++ map (reflectPoint fold) (filter ((> value) . fst) points)
-doFold points fold@(Y, value) = (Set.toList . Set.fromList) $ filter ((< value) . snd) points ++ map (reflectPoint fold) (filter ((> value) . snd) points)
+doFold points fold@(axis, value) =
+  let accessor = case axis of
+        X -> fst
+        Y -> snd
+      (beforeLine, afterLine) = partition ((< value) . accessor) points
+   in (Set.toList . Set.fromList) $ beforeLine ++ map (reflectPoint fold) afterLine
 
 reflectPoint :: (Axis, Int) -> (Int, Int) -> (Int, Int)
-reflectPoint (Y, value) (x, y) = (x, y - ((y - value) * 2))
-reflectPoint (X, value) (x, y) = (x - ((x - value) * 2), y)
+reflectPoint (Y, value) (x, y) = (x, y - (y - value) * 2)
+reflectPoint (X, value) (x, y) = (x - (x - value) * 2, y)
 
 getFolds :: [String] -> [(Axis, Int)]
 getFolds =
