@@ -6,10 +6,12 @@ module AOC
     split,
     getNumberGrid,
     NumberGrid,
+    windows,
   )
 where
 
 import Configuration.Dotenv
+import Control.Applicative
 import Control.Monad
 import Control.Monad.State.Lazy
 import Data.ByteString.Internal (packChars)
@@ -67,6 +69,9 @@ consumeUntilSequence stopWord = do
         Nothing -> return ()
 
       return ()
+
+windows :: Int -> [a] -> [[a]]
+windows n = getZipList . traverse ZipList . take n . tails
 
 split :: (Eq a) => a -> [a] -> [[a]]
 split _ [] = []

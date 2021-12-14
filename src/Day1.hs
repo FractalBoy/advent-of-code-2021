@@ -1,7 +1,6 @@
 module Day1 (part1, part2) where
 
-import Control.Applicative
-import Data.List
+import AOC
 
 part1 :: [String] -> String
 part1 = show . increases . windows 2 . ints
@@ -14,9 +13,6 @@ increases = foldl (\acc (x : y : _) -> if y > x then acc + 1 else acc) 0
 
 ints :: [String] -> [Int]
 ints = map read
-
-windows :: Int -> [a] -> [[a]]
-windows n = getZipList . traverse ZipList . take n . tails
 
 sums :: [[Int]] -> [Int]
 sums = map sum
