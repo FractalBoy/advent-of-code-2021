@@ -67,4 +67,4 @@ parseRule = evalState $ do
   pair <- consumeUntilSequence " -> "
   insertion <- get
 
-  return (pair, (head pair : insertion, insertion ++ [last pair]))
+  return (pair, (head pair : insertion, reverse $ last pair : insertion))
