@@ -40,27 +40,18 @@ countElements counts =
         $ M.toList counts
 
 doInsertions :: Int -> InsertionRules -> PairCounts -> PairCounts
-doInsertions 1 rules counts = doInsertion rules counts
-doInsertions n rules counts = doInsertions (n - 1) rules (doInsertion rules counts)
+doInsertions n rules = (!! n) . iterate (doInsertion rules)
 
 doInsertion :: InsertionRules -> PairCounts -> PairCounts
 doInsertion rules counts = foldl addPair M.empty $ M.keys counts
   where
     addPair :: PairCounts -> String -> PairCounts
-    addPair acc pair =
-      let amountToAdd = M.lookup pair counts
-          whatToAdd = M.lookup pair rules
-       in case amountToAdd of
-            Nothing -> acc
-            Just amountToAdd -> case whatToAdd of
-              Nothing -> acc
-              Just (firstToAdd, secondToAdd) ->
-                M.insertWith
-                  (+)
-                  secondToAdd
-                  amountToAdd
-                  ( M.insertWith (+) firstToAdd amountToAdd acc
-                  )
+    addPair acc pair = fromMaybe acc $ do
+      count <- M.lookup pair counts
+      (x, y) <- M.lookup pair rules
+
+      let acc' = M.insertWith (+) x count acc
+      return $ M.insertWith (+) y count acc'
 
 getPolymerTemplate :: [String] -> String
 getPolymerTemplate = head
