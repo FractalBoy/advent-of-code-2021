@@ -11,40 +11,53 @@ data Position = Position (Int, Int) Int deriving (Show)
 
 type AdjacencyList = M.Map (Int, Int) [Position]
 
-data Infinite a = Infinity | Finite a
+data Infinite a = PositiveInfinity | NegativeInfinity | Finite a deriving (Eq)
 
 instance Show a => Show (Infinite a) where
-  show Infinity = "Infinity"
+  show PositiveInfinity = "Infinity"
+  show NegativeInfinity = "-Infinity"
   show (Finite n) = show n
 
-instance Eq a => Eq (Infinite a) where
-  Infinity == Infinity = True
-  (Finite a) == (Finite b) = a == b
-  Infinity == (Finite _) = False
-  (Finite _) == Infinity = False
-  a /= b = not (a == b)
-
 instance Ord a => Ord (Infinite a) where
-  Infinity `compare` Infinity = EQ
-  Infinity `compare` (Finite _) = GT
-  (Finite _) `compare` Infinity = LT
+  PositiveInfinity `compare` PositiveInfinity = EQ
+  PositiveInfinity `compare` NegativeInfinity = GT
+  NegativeInfinity `compare` PositiveInfinity = LT
+  NegativeInfinity `compare` NegativeInfinity = EQ
+  PositiveInfinity `compare` (Finite _) = GT
+  NegativeInfinity `compare` (Finite _) = LT
+  (Finite _) `compare` PositiveInfinity = LT
+  (Finite _) `compare` NegativeInfinity = GT
   (Finite a) `compare` (Finite b) = a `compare` b
 
-instance Functor Infinite where
-  fmap _ Infinity = Infinity
-  fmap fab (Finite a) = Finite (fab a)
-
-instance Applicative Infinite where
-  pure = Finite
-  fs <*> as = do
-    f <- fs
-    f <$> as
-
-instance Monad Infinite where
-  return = Finite
-  x >>= y = case x of
-    Infinity -> Infinity
-    Finite x -> y x
+instance Num a => Num (Infinite a) where
+  PositiveInfinity + PositiveInfinity = PositiveInfinity
+  PositiveInfinity + NegativeInfinity = undefined
+  NegativeInfinity + PositiveInfinity = undefined
+  NegativeInfinity + NegativeInfinity = NegativeInfinity
+  PositiveInfinity + (Finite _) = PositiveInfinity
+  NegativeInfinity + (Finite _) = NegativeInfinity
+  (Finite _) + PositiveInfinity = PositiveInfinity
+  (Finite _) + NegativeInfinity = NegativeInfinity
+  (Finite a) + (Finite b) = Finite (a + b)
+  PositiveInfinity * PositiveInfinity = undefined
+  PositiveInfinity * NegativeInfinity = PositiveInfinity
+  NegativeInfinity * PositiveInfinity = NegativeInfinity
+  NegativeInfinity * NegativeInfinity = undefined
+  PositiveInfinity * (Finite _) = PositiveInfinity
+  NegativeInfinity * (Finite _) = NegativeInfinity
+  (Finite _) * PositiveInfinity = NegativeInfinity
+  (Finite _) * NegativeInfinity = PositiveInfinity
+  (Finite a) * (Finite b) = Finite (a * b)
+  abs PositiveInfinity = PositiveInfinity
+  abs NegativeInfinity = PositiveInfinity
+  abs (Finite a) = Finite (abs a)
+  signum PositiveInfinity = Finite 1
+  signum NegativeInfinity = Finite (-1)
+  signum (Finite a) = Finite (signum a)
+  negate PositiveInfinity = NegativeInfinity
+  negate NegativeInfinity = PositiveInfinity
+  negate (Finite a) = Finite (negate a)
+  fromInteger a = Finite (fromInteger a)
 
 example =
   [ "1163751742",
@@ -66,14 +79,14 @@ findOptimalPath :: AdjacencyList -> Infinite Int
 findOptimalPath graph =
   let source = (0, 0)
       target = (maximum $ map fst $ M.keys graph, maximum $ map snd $ M.keys graph)
-      distances = M.fromList [(coord, Infinity) | coord <- M.keys graph]
+      distances = M.fromList [(coord, PositiveInfinity) | coord <- M.keys graph]
       distances' = M.adjust (const $ Finite 0) source distances
    in findOptimalPath' source target (M.keys graph) distances'
   where
     findOptimalPath' :: (Int, Int) -> (Int, Int) -> [(Int, Int)] -> M.Map (Int, Int) (Infinite Int) -> Infinite Int
     findOptimalPath' source target queue distances =
       if null queue
-        then fromMaybe Infinity $ M.lookup target distances
+        then fromMaybe PositiveInfinity $ M.lookup target distances
         else
           let (closest, dist) =
                 minimumBy (\(_, a) (_, b) -> a `compare` b) $
@@ -91,8 +104,8 @@ findOptimalPath graph =
                       let neighbor = find (\(Position coord _) -> coord == k) neighbors
                        in case neighbor of
                             Nothing -> return v
-                            Just (Position coord cost) -> do
-                              let alt = dist >>= (\x -> Finite (x + cost))
+                            Just (Position _ cost) -> do
+                              let alt = dist + fromInteger (toInteger cost)
                                in if alt < v then return alt else return v
                   )
                   distances
