@@ -1,4 +1,4 @@
-module Day15 where
+module Day15 (part1, part2) where
 
 import AOC
 import Control.Monad
@@ -75,6 +75,9 @@ example =
 part1 :: [String] -> String
 part1 = show . findOptimalPath . numberGridToAdjacencyList . getNumberGrid
 
+part2 :: [String] -> String
+part2 = show . findOptimalPath . numberGridToAdjacencyList . expandNumberGrid . getNumberGrid
+
 findOptimalPath :: AdjacencyList -> Infinite Int
 findOptimalPath graph =
   let source = (0, 0)
@@ -128,6 +131,29 @@ numberGridToAdjacencyList grid =
           )
       )
       $ M.keys grid
+
+expandNumberGrid :: NumberGrid -> NumberGrid
+expandNumberGrid grid =
+  let width = (+ 1) $ maximum $ map snd $ M.keys grid
+      height = (+ 1) $ maximum $ map fst $ M.keys grid
+   in M.fromList $
+        join $
+          mapMaybe
+            ( \coord@(y, x) ->
+                let originalValue = M.lookup coord grid
+                 in case originalValue of
+                      Nothing -> Nothing
+                      Just originalValue ->
+                        Just $
+                          ( \m n ->
+                              ( (y + m * width, x + n * height),
+                                originalValue + m + n `mod` 9 + 1
+                              )
+                          )
+                            <$> [0 .. 4]
+                            <*> [0 .. 4]
+            )
+            $ M.keys grid
 
 getNeighbors :: (Int, Int) -> [(Int, Int)]
 getNeighbors (y, x) = [(y - 1, x), (y, x - 1), (y + 1, x), (y, x + 1)]

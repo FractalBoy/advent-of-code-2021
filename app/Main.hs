@@ -100,6 +100,7 @@ solve 13 2 xs = MaybeT $ return $ Just $ Day13.part2 xs
 solve 14 1 xs = MaybeT $ return $ Just $ Day14.part1 xs
 solve 14 2 xs = MaybeT $ return $ Just $ Day14.part2 xs
 solve 15 1 xs = MaybeT $ return $ Just $ Day15.part1 xs
+solve 15 2 xs = MaybeT $ return $ Just $ Day15.part2 xs
 solve day part _ = do
   lift $ hPutStrLn stderr $ "Day " ++ show day ++ " Part " ++ show part ++ " not yet implemented."
   MaybeT $ return Nothing
