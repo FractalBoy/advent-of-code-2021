@@ -2,117 +2,52 @@ module Day15 (part1, part2) where
 
 import AOC
 import Control.Monad
-import Data.Foldable
 import qualified Data.Map as M
 import Data.Maybe
-import qualified Data.Set as Set
+import qualified Data.PQueue.Prio.Min as Q
 
-data Position = Position (Int, Int) Int deriving (Show)
+data Position = Position (Int, Int) Float deriving (Show)
 
 type AdjacencyList = M.Map (Int, Int) [Position]
 
-data Infinite a = PositiveInfinity | NegativeInfinity | Finite a deriving (Eq)
-
-instance Show a => Show (Infinite a) where
-  show PositiveInfinity = "Infinity"
-  show NegativeInfinity = "-Infinity"
-  show (Finite n) = show n
-
-instance Ord a => Ord (Infinite a) where
-  PositiveInfinity `compare` PositiveInfinity = EQ
-  PositiveInfinity `compare` NegativeInfinity = GT
-  NegativeInfinity `compare` PositiveInfinity = LT
-  NegativeInfinity `compare` NegativeInfinity = EQ
-  PositiveInfinity `compare` (Finite _) = GT
-  NegativeInfinity `compare` (Finite _) = LT
-  (Finite _) `compare` PositiveInfinity = LT
-  (Finite _) `compare` NegativeInfinity = GT
-  (Finite a) `compare` (Finite b) = a `compare` b
-
-instance Num a => Num (Infinite a) where
-  PositiveInfinity + PositiveInfinity = PositiveInfinity
-  PositiveInfinity + NegativeInfinity = undefined
-  NegativeInfinity + PositiveInfinity = undefined
-  NegativeInfinity + NegativeInfinity = NegativeInfinity
-  PositiveInfinity + (Finite _) = PositiveInfinity
-  NegativeInfinity + (Finite _) = NegativeInfinity
-  (Finite _) + PositiveInfinity = PositiveInfinity
-  (Finite _) + NegativeInfinity = NegativeInfinity
-  (Finite a) + (Finite b) = Finite (a + b)
-  PositiveInfinity * PositiveInfinity = undefined
-  PositiveInfinity * NegativeInfinity = PositiveInfinity
-  NegativeInfinity * PositiveInfinity = NegativeInfinity
-  NegativeInfinity * NegativeInfinity = undefined
-  PositiveInfinity * (Finite _) = PositiveInfinity
-  NegativeInfinity * (Finite _) = NegativeInfinity
-  (Finite _) * PositiveInfinity = NegativeInfinity
-  (Finite _) * NegativeInfinity = PositiveInfinity
-  (Finite a) * (Finite b) = Finite (a * b)
-  abs PositiveInfinity = PositiveInfinity
-  abs NegativeInfinity = PositiveInfinity
-  abs (Finite a) = Finite (abs a)
-  signum PositiveInfinity = Finite 1
-  signum NegativeInfinity = Finite (-1)
-  signum (Finite a) = Finite (signum a)
-  negate PositiveInfinity = NegativeInfinity
-  negate NegativeInfinity = PositiveInfinity
-  negate (Finite a) = Finite (negate a)
-  fromInteger a = Finite (fromInteger a)
-
-example =
-  [ "1163751742",
-    "1381373672",
-    "2136511328",
-    "3694931569",
-    "7463417111",
-    "1319128137",
-    "1359912421",
-    "3125421639",
-    "1293138521",
-    "2311944581"
-  ]
-
 part1 :: [String] -> String
-part1 = show . findOptimalPath . numberGridToAdjacencyList . getNumberGrid
+part1 = show . floor . findOptimalPath . numberGridToAdjacencyList . getNumberGrid
 
 part2 :: [String] -> String
-part2 = show . findOptimalPath . numberGridToAdjacencyList . expandNumberGrid . getNumberGrid
+part2 = show . floor . findOptimalPath . numberGridToAdjacencyList . expandNumberGrid . getNumberGrid
 
-findOptimalPath :: AdjacencyList -> Infinite Int
+findOptimalPath :: AdjacencyList -> Float
 findOptimalPath graph =
-  let source = (0, 0)
-      target = (maximum $ map fst $ M.keys graph, maximum $ map snd $ M.keys graph)
-      distances = M.fromList [(coord, PositiveInfinity) | coord <- M.keys graph]
-      distances' = M.adjust (const $ Finite 0) source distances
-   in findOptimalPath' source target (M.keys graph) distances'
+  let distances = M.fromList [(coord, if coord == source then 0 else 1 / 0) | coord <- M.keys graph]
+   in findOptimalPath' (Q.fromList [(0, source)]) distances
   where
-    findOptimalPath' :: (Int, Int) -> (Int, Int) -> [(Int, Int)] -> M.Map (Int, Int) (Infinite Int) -> Infinite Int
-    findOptimalPath' source target queue distances =
-      if null queue
-        then fromMaybe PositiveInfinity $ M.lookup target distances
+    source = (0, 0)
+    target = maximum $ M.keys graph
+    findOptimalPath' :: Q.MinPQueue Float (Int, Int) -> M.Map (Int, Int) Float -> Float
+    findOptimalPath' queue distances =
+      if Q.null queue
+        then fromMaybe (1 / 0) (M.lookup target distances)
         else
-          let (closest, dist) =
-                minimumBy (\(_, a) (_, b) -> a `compare` b) $
-                  mapMaybe
-                    ( \coord -> do
-                        dist <- M.lookup coord distances
-                        return (coord, dist)
-                    )
-                    queue
-              queue' = filter (/= closest) queue
-              neighbors = filter (\(Position coord _) -> coord `elem` queue') $ fromMaybe [] (M.lookup closest graph)
-              distances' =
-                M.mapMaybeWithKey
-                  ( \k v ->
-                      let neighbor = find (\(Position coord _) -> coord == k) neighbors
-                       in case neighbor of
-                            Nothing -> return v
-                            Just (Position _ cost) -> do
-                              let alt = dist + fromInteger (toInteger cost)
-                               in if alt < v then return alt else return v
-                  )
-                  distances
-           in findOptimalPath' source target queue' distances'
+          let ((dist, closest), queue') = Q.deleteFindMin queue
+           in case M.lookup closest distances of
+                Nothing -> 1 / 0
+                Just currDist ->
+                  if currDist == dist
+                    then
+                      let neighbors = fromMaybe [] (M.lookup closest graph)
+                          newCosts =
+                            mapMaybe
+                              ( \(Position coord cost) ->
+                                  let alt = dist + cost
+                                   in case M.lookup coord distances of
+                                        Nothing -> Nothing
+                                        Just oldCost -> if alt < oldCost then Just (alt, coord) else Nothing
+                              )
+                              neighbors
+                          queue'' = Q.union queue' (Q.fromList newCosts)
+                          distances' = foldl (\acc (cost, coord) -> M.insert coord cost acc) distances newCosts
+                       in findOptimalPath' queue'' distances'
+                    else findOptimalPath' queue' distances
 
 numberGridToAdjacencyList :: NumberGrid -> AdjacencyList
 numberGridToAdjacencyList grid =
@@ -125,7 +60,7 @@ numberGridToAdjacencyList grid =
                   let risk = M.lookup neighbor grid
                    in case risk of
                         Nothing -> Nothing
-                        Just risk -> Just (Position neighbor risk)
+                        Just risk -> Just (Position neighbor (fromIntegral risk))
               )
               $ getNeighbors coord
           )
@@ -147,7 +82,8 @@ expandNumberGrid grid =
                         Just $
                           ( \m n ->
                               ( (y + m * width, x + n * height),
-                                originalValue + m + n `mod` 9 + 1
+                                let newValue = originalValue + m + n
+                                 in if newValue > 9 then newValue - 9 else newValue
                               )
                           )
                             <$> [0 .. 4]
