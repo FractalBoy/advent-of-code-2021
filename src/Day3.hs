@@ -1,5 +1,6 @@
 module Day3 (part1, part2) where
 
+import AOC
 import Control.Applicative
 import Data.Char
 import Data.List
@@ -61,11 +62,3 @@ avgColumns c =
     reverse $
       foldl (\acc x -> map (intToFloat . digitToInt) x : acc) [] $
         transpose c
-
-binaryToInt :: String -> Int
-binaryToInt bin =
-  sum $
-    getZipList $
-      (*)
-        <$> ZipList [2 ^ x | x <- [0 ..]]
-        <*> ZipList (reverse $ map digitToInt bin)

@@ -7,6 +7,7 @@ module AOC
     getNumberGrid,
     NumberGrid,
     windows,
+    binaryToInt,
   )
 where
 
@@ -84,3 +85,11 @@ getNumberGrid =
   M.fromList
     . join
     . zipWith (\y str -> zipWith (\x c -> ((y, x), digitToInt c)) [0 ..] str) [0 ..]
+
+binaryToInt :: String -> Int
+binaryToInt bin =
+  sum $
+    getZipList $
+      (*)
+        <$> ZipList [2 ^ x | x <- [0 ..]]
+        <*> ZipList (reverse $ map digitToInt bin)
