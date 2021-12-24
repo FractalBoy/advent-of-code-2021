@@ -1,20 +1,65 @@
-module Day16 (part1) where
+module Day16 (part1, part2) where
 
 import AOC
 import Control.Monad.State
 import Data.Maybe
 
-data Packet = LiteralPacket Int Int Int | OperatorPacket Int Int [Packet] deriving (Show)
+data Operator
+  = Sum
+  | Product
+  | Minimum
+  | Maximum
+  | GreaterThan
+  | LessThan
+  | EqualTo
+  deriving (Show)
+
+data Packet
+  = LiteralPacket Int Int Int
+  | OperatorPacket Int Operator [Packet]
+  deriving (Show)
 
 part1 :: [String] -> String
-part1 input = fromMaybe "" $ do
+part1 = solve sumVersions
+
+part2 :: [String] -> String
+part2 = solve calculatePacket
+
+solve :: (Packet -> Int) -> [String] -> String
+solve calc input = fromMaybe "" $ do
   let binary = convertHexToBinary $ head input
   packet <- evalState consumePacket binary
-  return $ show $ sumVersions packet
+  return $ show $ calc packet
 
 sumVersions :: Packet -> Int
 sumVersions (LiteralPacket version _ _) = version
 sumVersions (OperatorPacket version _ packets) = version + sum (map sumVersions packets)
+
+calculatePacket :: Packet -> Int
+calculatePacket (LiteralPacket _ _ value) = value
+calculatePacket (OperatorPacket _ Sum packets) = sum (map calculatePacket packets)
+calculatePacket (OperatorPacket _ Product packets) = product (map calculatePacket packets)
+calculatePacket (OperatorPacket _ Minimum packets) = minimum (map calculatePacket packets)
+calculatePacket (OperatorPacket _ Maximum packets) = maximum (map calculatePacket packets)
+calculatePacket (OperatorPacket _ GreaterThan (packetA : packetB : _)) =
+  if calculatePacket packetA > calculatePacket packetB then 1 else 0
+calculatePacket (OperatorPacket _ GreaterThan _) = undefined
+calculatePacket (OperatorPacket _ LessThan (packetA : packetB : _)) =
+  if calculatePacket packetA < calculatePacket packetB then 1 else 0
+calculatePacket (OperatorPacket _ LessThan _) = undefined
+calculatePacket (OperatorPacket _ EqualTo (packetA : packetB : _)) =
+  if calculatePacket packetA == calculatePacket packetB then 1 else 0
+calculatePacket (OperatorPacket _ EqualTo _) = undefined
+
+getOperator :: Int -> Operator
+getOperator 0 = Sum
+getOperator 1 = Product
+getOperator 2 = Minimum
+getOperator 3 = Maximum
+getOperator 5 = GreaterThan
+getOperator 6 = LessThan
+getOperator 7 = EqualTo
+getOperator _ = undefined
 
 splitPacket :: String -> (Int, Int, String)
 splitPacket packet = ((binaryToInt . take 3) packet, (binaryToInt . take 3 . drop 3) packet, drop 6 packet)
@@ -54,12 +99,12 @@ consumeOperatorPacket = do
       let totalLength = (binaryToInt . take 15 . drop 1) remainder
           subpackets = drop 16 remainder
       put subpackets
-      OperatorPacket version typeId <$> consumePacketsOfLength totalLength
+      OperatorPacket version (getOperator typeId) <$> consumePacketsOfLength totalLength
     else do
       let numSubPackets = (binaryToInt . take 11 . drop 1) remainder
           subpackets = drop 12 remainder
       put subpackets
-      OperatorPacket version typeId <$> consumePacketsOfNumber numSubPackets
+      OperatorPacket version (getOperator typeId) <$> consumePacketsOfNumber numSubPackets
 
 consumeLiteralPacket :: State String Packet
 consumeLiteralPacket = do
@@ -77,7 +122,6 @@ consumeLiteralPacket = do
           let (parsed, remainder) = consumeLiteralPacket' packet
            in (b : c : d : e : parsed, remainder)
         else (b : c : d : e : "", packet)
-    consumeLiteralPacket' [] = ("", "")
     consumeLiteralPacket' packet = ("", packet)
 
 hexDigitToBinary :: Char -> String
