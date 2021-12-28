@@ -114,35 +114,39 @@ explode num =
         _ -> undefined
   where
     changeLeft :: Breadcrumbs -> SnailfishNumber -> Breadcrumbs
-    changeLeft breadcrumbs (Number num) = case findIndex isLeftNumber breadcrumbs of
-      Nothing -> case findIndex isLeftPair breadcrumbs of
-        Just index ->
-          let leftPair = getLeftPair (breadcrumbs !! index)
-           in take index breadcrumbs
-                ++ [R (changeRightmostNumber leftPair num)]
-                ++ drop (index + 1) breadcrumbs
+    changeLeft breadcrumbs (Number num) =
+      case findIndex isLeft breadcrumbs of
         Nothing -> breadcrumbs
-      Just index ->
-        let leftNumber = getLeftNumber (breadcrumbs !! index)
-         in take index breadcrumbs
-              ++ [R (Number (leftNumber + num))]
-              ++ drop (index + 1) breadcrumbs
+        Just index ->
+          take index breadcrumbs
+            ++ [ case breadcrumbs !! index of
+                   (R (Number left)) -> R (Number (left + num))
+                   (R pair@(Pair _ _)) -> R (changeRightmostNumber pair num)
+                   _ -> undefined
+               ]
+            ++ drop (index + 1) breadcrumbs
     changeLeft _ _ = undefined
     changeRight :: Breadcrumbs -> SnailfishNumber -> Breadcrumbs
-    changeRight breadcrumbs (Number num) = case findIndex isRightNumber breadcrumbs of
-      Nothing -> case findIndex isRightPair breadcrumbs of
-        Just index ->
-          let rightPair = getRightPair (breadcrumbs !! index)
-           in take index breadcrumbs
-                ++ [L (changeLeftmostNumber rightPair num)]
-                ++ drop (index + 1) breadcrumbs
+    changeRight breadcrumbs (Number num) =
+      case findIndex isRight breadcrumbs of
         Nothing -> breadcrumbs
-      Just index ->
-        let rightNumber = getRightNumber (breadcrumbs !! index)
-         in take index breadcrumbs
-              ++ [L (Number (rightNumber + num))]
-              ++ drop (index + 1) breadcrumbs
+        Just index ->
+          take index breadcrumbs
+            ++ [ case breadcrumbs !! index of
+                   (L (Number left)) -> L (Number (left + num))
+                   (L pair@(Pair _ _)) -> L (changeLeftmostNumber pair num)
+                   _ -> undefined
+               ]
+            ++ drop (index + 1) breadcrumbs
     changeRight _ _ = undefined
+
+isLeft :: Breadcrumb -> Bool
+isLeft (R _) = True
+isLeft _ = False
+
+isRight :: Breadcrumb -> Bool
+isRight (L _) = True
+isRight _ = False
 
 isLeftNumber :: Breadcrumb -> Bool
 isLeftNumber (R (Number _)) = True
