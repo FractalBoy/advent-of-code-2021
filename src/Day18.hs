@@ -1,32 +1,6 @@
-module Day18 (part1) where
+module Day18 (part1, part2) where
 
 import Control.Applicative
-
-example =
-  [ "[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]",
-    "[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]",
-    "[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]",
-    "[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]",
-    "[7,[5,[[3,8],[1,4]]]]",
-    "[[2,[2,2]],[8,[8,1]]]",
-    "[2,9]",
-    "[1,[[[9,3],9],[[9,0],[0,7]]]]",
-    "[[[5,[7,4]],7],1]",
-    "[[[[4,2],2],6],[8,7]]"
-  ]
-
-example2 =
-  [ "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]",
-    "[[[5,[2,8]],4],[5,[[9,9],0]]]",
-    "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]",
-    "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]",
-    "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]",
-    "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]",
-    "[[[[5,4],[7,7]],8],[[8,3],8]]",
-    "[[9,3],[[9,9],[6,[4,9]]]]",
-    "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]",
-    "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]"
-  ]
 
 data SnailfishNumber
   = Pair SnailfishNumber SnailfishNumber
@@ -35,6 +9,13 @@ data SnailfishNumber
 instance Show SnailfishNumber where
   show (Number num) = show num
   show (Pair left right) = "[" ++ show left ++ "," ++ show right ++ "]"
+
+instance Eq SnailfishNumber where
+  (Number num1) == (Number num2) = num1 == num2
+  (Pair _ _) == (Number _) = False
+  (Number _) == (Pair _ _) = False
+  (Pair left1 right1) == (Pair left2 right2) = left1 == left2 && right1 == right2
+  num1 /= num2 = not (num1 == num2)
 
 data Breadcrumb = L SnailfishNumber | R SnailfishNumber deriving (Show)
 
@@ -48,6 +29,14 @@ part1 (line : lines) = show $ part1' (parseSnailfishNumber line) lines
     part1' pair (line : lines) = part1' (reduce (Pair pair (parseSnailfishNumber line))) lines
     part1' pair [] = magnitude pair
 part1 _ = ""
+
+part2 :: [String] -> String
+part2 lines =
+  let numbers = map parseSnailfishNumber lines
+   in show $
+        maximum $
+          map (\(left, right) -> magnitude $ reduce (Pair left right)) $
+            filter (uncurry (/=)) $ (,) <$> numbers <*> numbers
 
 magnitude :: SnailfishNumber -> Int
 magnitude (Pair left right) = 3 * magnitude left + 2 * magnitude right
@@ -103,21 +92,18 @@ findSplitFocus zipper@(Pair left right, _) =
 
 split :: SnailfishNumber -> Maybe SnailfishNumber
 split n = do
-  (num, breadcrumbs) <- findSplitFocus (n, [])
+  (Number num, breadcrumbs) <- findSplitFocus (n, [])
 
-  splitted <- splitNumber num
-  return $ fst $ goToTop (splitted, breadcrumbs)
+  let half = fromIntegral num / 2
 
-splitNumber :: SnailfishNumber -> Maybe SnailfishNumber
-splitNumber num@(Number n)
-  | n >= 10 = Just $ Pair (Number (floor (fromIntegral n / 2))) (Number (ceiling (fromIntegral n / 2)))
-  | otherwise = Just num
-splitNumber _ = Nothing
+  return $ fst $ goToTop (Pair (Number (floor half)) (Number (ceiling half)), breadcrumbs)
 
 explode :: SnailfishNumber -> Maybe SnailfishNumber
 explode num = do
   zipper@(Pair (Number left) (Number _), _) <- findExplodeFocus (num, [])
 
+  -- In the next two steps, we find the rightmost and leftmost numbers and add the appropriate
+  -- value to each, then go back to the top of the tree and find the exploded pair again.
   zipper'@(Pair (Number _) (Number right), _) <-
     ( (findRightmostOnLeft zipper >>= addToZipper left)
         >>= findExplodeFocus . goToTop
