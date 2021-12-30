@@ -1,7 +1,6 @@
-module Day18 where
+module Day18 (part1) where
 
-import Data.List
-import Data.Maybe
+import Control.Applicative
 
 example =
   [ "[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]",
@@ -14,6 +13,19 @@ example =
     "[1,[[[9,3],9],[[9,0],[0,7]]]]",
     "[[[5,[7,4]],7],1]",
     "[[[[4,2],2],6],[8,7]]"
+  ]
+
+example2 =
+  [ "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]",
+    "[[[5,[2,8]],4],[5,[[9,9],0]]]",
+    "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]",
+    "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]",
+    "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]",
+    "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]",
+    "[[[[5,4],[7,7]],8],[[8,3],8]]",
+    "[[9,3],[[9,9],[6,[4,9]]]]",
+    "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]",
+    "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]"
   ]
 
 data SnailfishNumber
@@ -34,14 +46,15 @@ part1 :: [String] -> String
 part1 (line : lines) = show $ part1' (parseSnailfishNumber line) lines
   where
     part1' pair (line : lines) = part1' (reduce (Pair pair (parseSnailfishNumber line))) lines
-    part1' pair [] = pair
+    part1' pair [] = magnitude pair
 part1 _ = ""
 
+magnitude :: SnailfishNumber -> Int
+magnitude (Pair left right) = 3 * magnitude left + 2 * magnitude right
+magnitude (Number num) = num
+
 reduce :: SnailfishNumber -> SnailfishNumber
-reduce pair
-  | canExplode pair = reduce (explode pair)
-  | canSplit pair = reduce (split pair)
-  | otherwise = pair
+reduce pair = maybe pair reduce (explode pair <|> split pair)
 
 parseSnailfishNumber :: String -> SnailfishNumber
 parseSnailfishNumber str
@@ -76,135 +89,70 @@ findExplodeFocus :: Zipper -> Maybe Zipper
 findExplodeFocus zipper@(Pair left right, crumbs) =
   if length crumbs == 4
     then Just zipper
-    else
-      let zipperLeft = goLeft zipper >>= findExplodeFocus
-          zipperRight = goRight zipper >>= findExplodeFocus
-       in if isJust zipperLeft then zipperLeft else zipperRight
+    else (goLeft zipper >>= findExplodeFocus) <|> goRight zipper >>= findExplodeFocus
 findExplodeFocus (_, []) = Nothing
 findExplodeFocus (Number _, _) = Nothing
 
-canExplode :: SnailfishNumber -> Bool
-canExplode n = (isJust . findExplodeFocus) (n, [])
+findSplitFocus :: Zipper -> Maybe Zipper
+findSplitFocus zipper@(Number n, _)
+  | n >= 10 = Just zipper
+  | otherwise = Nothing
+findSplitFocus zipper@(Pair left right, _) =
+  (goLeft zipper >>= findSplitFocus)
+    <|> goRight zipper >>= findSplitFocus
 
-canSplit :: SnailfishNumber -> Bool
-canSplit (Number n) = n >= 10
-canSplit (Pair left right) = canSplit left || canSplit right
+split :: SnailfishNumber -> Maybe SnailfishNumber
+split n = do
+  (num, breadcrumbs) <- findSplitFocus (n, [])
 
-split :: SnailfishNumber -> SnailfishNumber
-split pair@(Pair left right)
-  | canSplit left = Pair (split left) right
-  | canSplit right = Pair left (split right)
-  | otherwise = pair
-split num@(Number _) = splitNumber num
+  splitted <- splitNumber num
+  return $ fst $ goToTop (splitted, breadcrumbs)
 
-splitNumber :: SnailfishNumber -> SnailfishNumber
+splitNumber :: SnailfishNumber -> Maybe SnailfishNumber
 splitNumber num@(Number n)
-  | n >= 10 = Pair (Number (floor (fromIntegral n / 2))) (Number (ceiling (fromIntegral n / 2)))
-  | otherwise = num
-splitNumber _ = undefined
+  | n >= 10 = Just $ Pair (Number (floor (fromIntegral n / 2))) (Number (ceiling (fromIntegral n / 2)))
+  | otherwise = Just num
+splitNumber _ = Nothing
 
-explode :: SnailfishNumber -> SnailfishNumber
-explode num =
-  let zipper = findExplodeFocus (num, [])
-   in case zipper of
-        Nothing -> num
-        Just (Pair left right, breadcrumbs) ->
-          let explodedZipper = (Number 0, changeLeft (changeRight breadcrumbs right) left)
-           in fst $ goToTop explodedZipper
-        _ -> undefined
-  where
-    changeLeft :: Breadcrumbs -> SnailfishNumber -> Breadcrumbs
-    changeLeft breadcrumbs (Number num) =
-      case findIndex isLeft breadcrumbs of
-        Nothing -> breadcrumbs
-        Just index ->
-          take index breadcrumbs
-            ++ [ case breadcrumbs !! index of
-                   (R (Number left)) -> R (Number (left + num))
-                   (R pair@(Pair _ _)) -> R (changeRightmostNumber pair num)
-                   _ -> undefined
-               ]
-            ++ drop (index + 1) breadcrumbs
-    changeLeft _ _ = undefined
-    changeRight :: Breadcrumbs -> SnailfishNumber -> Breadcrumbs
-    changeRight breadcrumbs (Number num) =
-      case findIndex isRight breadcrumbs of
-        Nothing -> breadcrumbs
-        Just index ->
-          take index breadcrumbs
-            ++ [ case breadcrumbs !! index of
-                   (L (Number left)) -> L (Number (left + num))
-                   (L pair@(Pair _ _)) -> L (changeLeftmostNumber pair num)
-                   _ -> undefined
-               ]
-            ++ drop (index + 1) breadcrumbs
-    changeRight _ _ = undefined
+explode :: SnailfishNumber -> Maybe SnailfishNumber
+explode num = do
+  zipper@(Pair (Number left) (Number _), _) <- findExplodeFocus (num, [])
 
-isLeft :: Breadcrumb -> Bool
-isLeft (R _) = True
-isLeft _ = False
+  zipper'@(Pair (Number _) (Number right), _) <-
+    ( (findRightmostOnLeft zipper >>= addToZipper left)
+        >>= findExplodeFocus . goToTop
+      )
+      <|> Just zipper
 
-isRight :: Breadcrumb -> Bool
-isRight (L _) = True
-isRight _ = False
+  (_, breadcrumbs) <-
+    ( (findLeftmostOnRight zipper' >>= addToZipper right)
+        >>= findExplodeFocus . goToTop
+      )
+      <|> Just zipper'
 
-isLeftNumber :: Breadcrumb -> Bool
-isLeftNumber (R (Number _)) = True
-isLeftNumber _ = False
+  return $ fst $ goToTop (Number 0, breadcrumbs)
 
-isLeftPair :: Breadcrumb -> Bool
-isLeftPair (R (Pair _ _)) = True
-isLeftPair _ = False
+addToZipper :: Int -> Zipper -> Maybe Zipper
+addToZipper _ (Pair _ _, _) = Nothing
+addToZipper toAdd (Number num, breadcrumbs) = Just (Number (num + toAdd), breadcrumbs)
 
-isRightNumber :: Breadcrumb -> Bool
-isRightNumber (L (Number _)) = True
-isRightNumber _ = False
+findRightmostOnLeft :: Zipper -> Maybe Zipper
+findRightmostOnLeft zipper@(_, (L _) : crumbs) = goUp zipper >>= findRightmostOnLeft
+findRightmostOnLeft zipper@(_, (R _) : crumbs) = goUp zipper >>= goLeft >>= findRightmostNumber
+findRightmostOnLeft zipper@(_, []) = Nothing
 
-isRightPair :: Breadcrumb -> Bool
-isRightPair (L (Pair _ _)) = True
-isRightPair _ = False
+findRightmostNumber :: Zipper -> Maybe Zipper
+findRightmostNumber zipper@(Pair _ _, _) = goRight zipper >>= findRightmostNumber
+findRightmostNumber zipper@(Number _, _) = Just zipper
 
-getLeftNumber :: Breadcrumb -> Int
-getLeftNumber (R (Number left)) = left
-getLeftNumber _ = undefined
+findLeftmostOnRight :: Zipper -> Maybe Zipper
+findLeftmostOnRight zipper@(_, (R _) : crumbs) = goUp zipper >>= findLeftmostOnRight
+findLeftmostOnRight zipper@(_, (L _) : crumbs) = goUp zipper >>= goRight >>= findLeftmostNumber
+findLeftmostOnRight zipper@(_, []) = Nothing
 
-getLeftPair :: Breadcrumb -> SnailfishNumber
-getLeftPair (R pair@(Pair _ _)) = pair
-getLeftPair _ = undefined
-
-changeRightmostNumber :: SnailfishNumber -> Int -> SnailfishNumber
-changeRightmostNumber num value = fromMaybe num (changeRightmostNumber' num value)
-  where
-    changeRightmostNumber' (Pair left (Number right)) value = Just (Pair left (Number (right + value)))
-    changeRightmostNumber' (Pair left@(Number _) right@(Pair _ _)) value =
-      let rightBranch = changeRightmostNumber' right value
-       in if isJust rightBranch then rightBranch else Just left
-    changeRightmostNumber' (Pair left@(Pair _ _) right@(Pair _ _)) value =
-      let rightBranch = changeRightmostNumber' right value
-          leftBranch = changeRightmostNumber' left value
-       in if isJust rightBranch then rightBranch else leftBranch
-    changeRightmostNumber' (Number _) value = Nothing
-
-changeLeftmostNumber :: SnailfishNumber -> Int -> SnailfishNumber
-changeLeftmostNumber num value = fromMaybe num (changeLeftmostNumber' num value)
-  where
-    changeLeftmostNumber' (Pair (Number left) right) value = Just (Pair (Number (left + value)) right)
-    changeLeftmostNumber' (Pair left@(Pair _ _) right@(Number _)) value =
-      let leftBranch = changeLeftmostNumber' left value
-       in if isJust leftBranch then leftBranch else Just right
-    changeLeftmostNumber' (Pair left@(Pair _ _) right@(Pair _ _)) value =
-      let leftBranch = changeLeftmostNumber' left value
-          rightBranch = changeLeftmostNumber' right value
-       in if isJust leftBranch then leftBranch else rightBranch
-    changeLeftmostNumber' (Number _) value = Nothing
-
-getRightNumber :: Breadcrumb -> Int
-getRightNumber (L (Number right)) = right
-getRightNumber _ = undefined
-
-getRightPair :: Breadcrumb -> SnailfishNumber
-getRightPair (L pair@(Pair _ _)) = pair
-getRightPair _ = undefined
+findLeftmostNumber :: Zipper -> Maybe Zipper
+findLeftmostNumber zipper@(Pair _ _, _) = goLeft zipper >>= findLeftmostNumber
+findLeftmostNumber zipper@(Number _, _) = Just zipper
 
 goLeft :: Zipper -> Maybe Zipper
 goLeft (Pair left right, bs) = Just (left, L right : bs)
